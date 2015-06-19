@@ -1,8 +1,10 @@
 package x
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -34,14 +36,14 @@ type Node struct {
 }
 
 type Instruction struct {
-	Subject     string    `json:"subject,omitempty"`
-	SubjectType string    `json:"subject_type,omitempty"`
-	Predicate   string    `json:"predicate,omitempty"`
-	Object      string    `json:"object,omitempty"`
-	ObjectId    string    `json:"object_id,omitempty"`
-	Timestamp   time.Time `json:"timestamp,omitempty"`
-	Source      string    `json:"source,omitempty"`
-	Operation   int       `json:"operation,omitempty"`
+	SubjectId   string `json:"subject_id,omitempty"`
+	SubjectType string `json:"subject_type,omitempty"`
+	Predicate   string `json:"predicate,omitempty"`
+	ObjectText  string `json:"object_text,omitempty"`
+	ObjectId    string `json:"object_id,omitempty"`
+	NanoTs      int64  `json:"nano_ts,omitempty"`
+	Source      string `json:"source,omitempty"`
+	Operation   int    `json:"operation,omitempty"`
 }
 
 const (
@@ -85,4 +87,15 @@ func ParseRequest(w http.ResponseWriter, r *http.Request, data interface{}) bool
 		return false
 	}
 	return true
+}
+
+const alphachars = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+func UniqueString(alpha int) string {
+	var buf bytes.Buffer
+	for i := 0; i < alpha; i++ {
+		idx := rand.Intn(len(alphachars))
+		buf.WriteByte(alphachars[idx])
+	}
+	return buf.String()
 }

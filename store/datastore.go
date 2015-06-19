@@ -1,8 +1,6 @@
 package store
 
 import (
-	"time"
-
 	"github.com/crud/x"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -31,14 +29,13 @@ func (ds *Datastore) Init(project string) {
 }
 
 func (ds *Datastore) getObjectKey(i x.Instruction, tablePrefix string) *datastore.Key {
-	skey := datastore.NewKey(ds.ctx, tablePrefix+"Subject", i.Subject, 0, nil)
+	skey := datastore.NewKey(ds.ctx, tablePrefix+"Subject", i.SubjectId, 0, nil)
 	ekey := datastore.NewKey(ds.ctx, tablePrefix+"Predicate", i.Predicate, 0, skey)
 	return datastore.NewIncompleteKey(ds.ctx, tablePrefix+"Instruction", ekey)
 }
 
 func (ds *Datastore) Commit(t string, i x.Instruction) bool {
 	dkey := ds.getObjectKey(i, t)
-	i.Timestamp = time.Now()
 	if i.Operation == x.NOOP {
 		log.WithField("instr", i).Error("Found NOOP instruction")
 		return false
@@ -51,6 +48,25 @@ func (ds *Datastore) Commit(t string, i x.Instruction) bool {
 	return true
 }
 
-func (ds *Datastore) ReadEntity(t, subject string) (n Node) {
-	skey := datastore.NewKey(ds.ctx, t+"Subject", subject, 0, nil)
+func (ds *Datastore) IsNew(t, kind, id string) bool {
+	dkey := datastore.NewKey(ds.ctx, t+kind, id, 0, nil)
+	var i x.Instruction
+	if err := datastore.Get(ds.ctx, dkey, &i); err == datastore.ErrNoSuchEntity {
+		return true
+	}
+	return false
 }
+
+/*
+func (ds *Datastore) ReadEntity(t, subject string) (n x.Node, rerr error) {
+	skey := datastore.NewKey(ds.ctx, t+"Subject", subject, 0, nil)
+	var its []Instruction
+	_, err := datastore.NewQuery(t+"Predicate").Ancestor(skey).GetAll(ds.ctx, &its)
+	if err != nil {
+		x.LogErr(log, err).Error("While retrieving instructions")
+		return n, err
+	}
+	log.Info("Got data: %+v", its)
+	return
+}
+*/

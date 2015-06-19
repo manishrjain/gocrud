@@ -41,9 +41,18 @@ func main() {
 	fmt.Println("Running...")
 
 	c := req.Context{}
-	c.TablePrefix = "Test-"
+	c.TablePrefix = "MRJN-"
 	c.Store = new(store.Datastore)
 	c.Store.Init("supportx-backend")
+
+	/*
+		api.Get("Review", "rid").
+			AddChild("Comment").SetSource("manish").
+			SetText("value", "this is a comment").
+			SetText("active", "true").Execute(&c)
+	*/
+	api.Get("Comment", "w56fk").SetSource("manish").
+		SetText("censored", "false").Execute(&c)
 
 	handleFunc("/commit", api.Handle, &c)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
