@@ -46,13 +46,36 @@ func main() {
 	c.Store.Init("supportx-backend")
 
 	/*
+		if err := api.Get("Review", "rid").
+			SetSource("mrjn").
+			Set("active", true).
+			Set("text", "this is my review").
+			Execute(&c); err != nil {
+			log.Errorf("While creating review: %v", err)
+		}
+	*/
+
+	/*
+		n := api.Get("Review", "rid").SetSource("andi")
+		n.AddChild("Comment").Set("text", "this is my comment")
+		n.AddChild("Vote").Set("value", 1)
+		log.Infof("Err while executing: %v", n.Execute(&c))
+	*/
+
+	api.Get("Review", "rid").JsonGraph(&c)
+	/*
 		api.Get("Review", "rid").
 			AddChild("Comment").SetSource("manish").
 			SetText("value", "this is a comment").
 			SetText("active", "true").Execute(&c)
 	*/
-	api.Get("Comment", "w56fk").SetSource("manish").
-		SetText("censored", "false").Execute(&c)
+	/*
+		api.Get("Comment", "w56fk").SetSource("manish").
+			SetText("censored", "false").Execute(&c)
+	*/
+	/*
+		api.Get("Comment", "w56fk").JsonGraph(&c)
+	*/
 
 	handleFunc("/commit", api.Handle, &c)
 	if err := http.ListenAndServe(":8080", nil); err != nil {

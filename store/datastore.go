@@ -28,14 +28,13 @@ func (ds *Datastore) Init(project string) {
 	log.Info("Connection to Google datastore established")
 }
 
-func (ds *Datastore) getObjectKey(i x.Instruction, tablePrefix string) *datastore.Key {
-	skey := datastore.NewKey(ds.ctx, tablePrefix+"Subject", i.SubjectId, 0, nil)
-	ekey := datastore.NewKey(ds.ctx, tablePrefix+"Predicate", i.Predicate, 0, skey)
-	return datastore.NewIncompleteKey(ds.ctx, tablePrefix+"Instruction", ekey)
+func (ds *Datastore) getIKey(i x.Instruction, tablePrefix string) *datastore.Key {
+	skey := datastore.NewKey(ds.ctx, tablePrefix+"Entity", i.SubjectId, 0, nil)
+	return datastore.NewIncompleteKey(ds.ctx, tablePrefix+"Instruction", skey)
 }
 
 func (ds *Datastore) Commit(t string, i x.Instruction) bool {
-	dkey := ds.getObjectKey(i, t)
+	dkey := ds.getIKey(i, t)
 	if i.Operation == x.NOOP {
 		log.WithField("instr", i).Error("Found NOOP instruction")
 		return false
@@ -48,25 +47,23 @@ func (ds *Datastore) Commit(t string, i x.Instruction) bool {
 	return true
 }
 
-func (ds *Datastore) IsNew(t, kind, id string) bool {
-	dkey := datastore.NewKey(ds.ctx, t+kind, id, 0, nil)
-	var i x.Instruction
-	if err := datastore.Get(ds.ctx, dkey, &i); err == datastore.ErrNoSuchEntity {
-		return true
+func (ds *Datastore) IsNew(t, id string) bool {
+	dkey := datastore.NewKey(ds.ctx, t+"Entity", id, 0, nil)
+	keys, err := datastore.NewQuery(t+"Instruction").Ancestor(dkey).
+		Limit(1).KeysOnly().GetAll(ds.ctx, nil)
+	if err != nil {
+		return false
 	}
-	return false
+	if len(keys) > 0 {
+		return false
+	}
+	return true
 }
 
-/*
-func (ds *Datastore) ReadEntity(t, subject string) (n x.Node, rerr error) {
-	skey := datastore.NewKey(ds.ctx, t+"Subject", subject, 0, nil)
-	var its []Instruction
-	_, err := datastore.NewQuery(t+"Predicate").Ancestor(skey).GetAll(ds.ctx, &its)
-	if err != nil {
-		x.LogErr(log, err).Error("While retrieving instructions")
-		return n, err
-	}
-	log.Info("Got data: %+v", its)
+func (ds *Datastore) GetEntity(t, subject string) (reply []x.Instruction, rerr error) {
+	skey := datastore.NewKey(ds.ctx, t+"Entity", subject, 0, nil)
+	log.Infof("skey: %+v", skey)
+	dkeys, rerr := datastore.NewQuery(t+"Instruction").Ancestor(skey).GetAll(ds.ctx, &reply)
+	log.Debugf("Got num keys: %+v", len(dkeys))
 	return
 }
-*/

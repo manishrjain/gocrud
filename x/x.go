@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -26,25 +25,22 @@ const (
 	REPLACE_ONE_PER_SOURCE    = 21
 )
 
-type Node struct {
-	Name      string            `json:"name,omitempty"`
-	Type      string            `json:"type,omitempty"`
-	Id        string            `json:"id,omitempty"`
-	Timestamp time.Time         `json:"timestamp,omitempty"`
-	Source    string            `json:"source,omitempty"`
-	Edges     map[string][]Node `json:"edges,omitempty"`
-}
-
 type Instruction struct {
 	SubjectId   string `json:"subject_id,omitempty"`
 	SubjectType string `json:"subject_type,omitempty"`
 	Predicate   string `json:"predicate,omitempty"`
-	ObjectText  string `json:"object_text,omitempty"`
+	Object      []byte `json:"object,omitempty"`
 	ObjectId    string `json:"object_id,omitempty"`
 	NanoTs      int64  `json:"nano_ts,omitempty"`
 	Source      string `json:"source,omitempty"`
 	Operation   int    `json:"operation,omitempty"`
 }
+
+type Its []Instruction
+
+func (its Its) Len() int           { return len(its) }
+func (its Its) Swap(i, j int)      { its[i], its[j] = its[j], its[i] }
+func (its Its) Less(i, j int) bool { return its[i].NanoTs < its[j].NanoTs }
 
 const (
 	E_ERROR            = "E_ERROR"
