@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -94,4 +95,22 @@ func UniqueString(alpha int) string {
 		buf.WriteByte(alphachars[idx])
 	}
 	return buf.String()
+}
+
+func ParseIdFromUrl(r *http.Request, urlToken string) (uid string, ok bool) {
+	url := r.URL.Path
+	idx := strings.LastIndex(url, urlToken)
+	if idx == -1 {
+		return
+	}
+	return url[idx+len(urlToken):], true
+}
+
+func Reply(w http.ResponseWriter, rep interface{}) {
+	if js, err := json.Marshal(rep); err == nil {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, string(js))
+	} else {
+		SetStatus(w, E_ERROR, "Internal server error")
+	}
 }

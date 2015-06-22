@@ -96,7 +96,6 @@ func main() {
 		api.Get("Comment", "w56fk").JsonGraph(&c)
 	*/
 
-	handleFunc("/commit", api.Handle, &c)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		x.LogErr(log, err).Fatal("Creating listener")
 	}

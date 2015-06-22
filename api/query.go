@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/crud/req"
 	"github.com/crud/x"
@@ -184,4 +185,17 @@ func (r *Result) toJson() (data map[string]interface{}) {
 func (r *Result) ToJson() ([]byte, error) {
 	data := r.toJson()
 	return json.Marshal(data)
+}
+
+func (r *Result) WriteJsonResponse(w http.ResponseWriter) {
+	data, err := r.ToJson()
+	if err != nil {
+		x.SetStatus(w, x.E_ERROR, err.Error())
+		return
+	}
+	_, err = w.Write(data)
+	if err != nil {
+		x.SetStatus(w, x.E_ERROR, err.Error())
+		return
+	}
 }
