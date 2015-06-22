@@ -85,7 +85,7 @@ func ParseRequest(w http.ResponseWriter, r *http.Request, data interface{}) bool
 	return true
 }
 
-const alphachars = "0123456789abcdefghijklmnopqrstuvwxyz"
+const alphachars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func UniqueString(alpha int) string {
 	var buf bytes.Buffer

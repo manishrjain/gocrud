@@ -62,7 +62,26 @@ func main() {
 		log.Infof("Err while executing: %v", n.Execute(&c))
 	*/
 
-	api.Get("Review", "rid").JsonGraph(&c)
+	// api.Get("Review", "rid").JsonGraph(&c)
+
+	/*
+		api.Get("Comment", "dgu6d").
+			SetSource("mrjn").AddChild("Vote").
+			Set("value", rand.Intn(10)).Execute(&c)
+	*/
+
+	api.Get("Vote", "ltkdw").SetSource("andi").Set("inactive", true).Execute(&c)
+	q := api.NewQuery("Review", "rid")
+	q.Collect("Comment")
+	q.Collect("Vote").FilterOut("inactive")
+	result, err := q.Run(&c)
+	if err != nil {
+		log.Errorf("While querying: %v", err)
+	} else {
+		data, err := result.ToJson()
+		log.Infof("Err: %v. Data: %+v", err, string(data))
+	}
+
 	/*
 		api.Get("Review", "rid").
 			AddChild("Comment").SetSource("manish").
