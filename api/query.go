@@ -23,11 +23,17 @@ type Object struct {
 	Source string
 	NanoTs int64
 }
+
 type Result struct {
 	Id       string
 	Kind     string
 	Children []*Result
 	Columns  map[string]Object
+}
+
+type runResult struct {
+	Result *Result
+	Err    error
 }
 
 func NewQuery(kind, id string) *Query {
@@ -70,15 +76,17 @@ func (q *Query) root() *Query {
 	return q
 }
 
-func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr error) {
+func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 	log.Debugf("Query: %+v", q)
 	its, err := c.Store.GetEntity(c.TablePrefix, q.id)
 	if err != nil {
 		x.LogErr(log, err).Error("While retrieving: ", q.id)
-		return nil, err
+		ch <- runResult{Result: nil, Err: err}
+		return
 	}
 	if len(its) == 0 {
-		return new(Result), nil
+		ch <- runResult{Result: new(Result), Err: nil}
+		return
 	}
 	sort.Sort(x.Its(its))
 
@@ -88,25 +96,29 @@ func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr erro
 		log.WithField("kind", child.kind).WithField("child", child).Debug("Following")
 	}
 
-	result = new(Result)
+	result := new(Result)
 	result.Columns = make(map[string]Object)
 	it := its[0]
 	result.Id = it.SubjectId
 	result.Kind = it.SubjectType
 
+	waitTimes := 0
+	childChan := make(chan runResult)
 	for _, it := range its {
 		if _, fout := q.filterOut[it.Predicate]; fout {
 			log.WithField("id", result.Id).
 				WithField("predicate", it.Predicate).
 				Debug("Discarding due to predicate filter")
-			return new(Result), nil
+			ch <- runResult{Result: new(Result), Err: nil}
+			return
 		}
 
 		if len(it.ObjectId) == 0 {
 			o := Object{NanoTs: it.NanoTs, Source: it.Source}
 			if err := json.Unmarshal(it.Object, &o.Value); err != nil {
 				x.LogErr(log, err).Error("While unmarshal")
-				return nil, err
+				ch <- runResult{Result: nil, Err: err}
+				return
 			}
 
 			result.Columns[it.Predicate] = o
@@ -116,13 +128,17 @@ func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr erro
 		if child, fw := follow[it.Predicate]; fw {
 			child.id = it.ObjectId
 			// Use child's maxDepth here, instead of parent's.
-			if cr, err := child.doRun(c, 0, child.maxDepth); err == nil {
-				if len(cr.Id) > 0 && len(cr.Kind) > 0 {
-					result.Children = append(result.Children, cr)
+			waitTimes += 1
+			go child.doRun(c, 0, child.maxDepth, childChan)
+			/*
+				if cr, err := child.doRun(c, 0, child.maxDepth); err == nil {
+					if len(cr.Id) > 0 && len(cr.Kind) > 0 {
+						result.Children = append(result.Children, cr)
+					}
+				} else {
+					x.LogErr(log, err).Error("While doRun")
 				}
-			} else {
-				x.LogErr(log, err).Error("While doRun")
-			}
+			*/
 			continue
 		}
 
@@ -130,21 +146,41 @@ func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr erro
 			child := new(Query)
 			child.id = it.ObjectId
 
-			if cr, err := child.doRun(c, level+1, max); err == nil {
-				result.Children = append(result.Children, cr)
-			} else {
-				x.LogErr(log, err).Error("While doRun")
+			waitTimes += 1
+			go child.doRun(c, level+1, max, childChan)
+			/*
+				if cr, err := child.doRun(c, level+1, max); err == nil {
+					result.Children = append(result.Children, cr)
+				} else {
+					x.LogErr(log, err).Error("While doRun")
+				}
+			*/
+		}
+	}
+	for i := 0; i < waitTimes; i++ {
+		log.Debugf("Waiting for children subroutines: %v", i)
+		rr := <-childChan
+		log.Debugf("Waiting done")
+		if rr.Err != nil {
+			x.LogErr(log, err).Error("While child doRun")
+		} else {
+			if len(rr.Result.Id) > 0 && len(rr.Result.Kind) > 0 {
+				result.Children = append(result.Children, rr.Result)
 			}
 		}
 	}
 
-	return result, nil
+	ch <- runResult{Result: result, Err: nil}
+	return
 }
 
 func (q *Query) Run(c *req.Context) (result *Result, rerr error) {
 	q = q.root()
 
-	return q.doRun(c, 0, q.maxDepth)
+	ch := make(chan runResult)
+	go q.doRun(c, 0, q.maxDepth, ch)
+	rr := <-ch // Blocking wait
+	return rr.Result, rr.Err
 }
 
 func (r *Result) Debug(level int) {
