@@ -89,7 +89,6 @@ func (n *Node) doExecute(c *req.Context) error {
 		}
 
 		var i x.Instruction
-		i.Operation = x.ADD
 		i.SubjectId = n.id
 		i.SubjectType = n.kind
 		i.Predicate = pred
@@ -118,6 +117,17 @@ func (n *Node) doExecute(c *req.Context) error {
 			"No source specified for id: %v kind: %v", n.id, n.kind))
 	}
 
+	// Children can only be added, not deleted via API. But they can be stopped
+	// from being retrieved.
+	// Scenario: How do I stop childA from being retrieved?
+	// Answer:
+	// Modify child by adding a 'deleted' edge
+	// Get(ChildKind, ChildId).Set("deleted", true).Execute(c)
+	//
+	// Then for retrieval from parent:
+	// NewQuery(ParentKind, ParentId).Collect(ChildKind).FilterOut("deleted")
+	// This would remove all children with a 'deleted' edge.
+
 	for _, child := range n.children {
 		if len(child.id) == 0 {
 			// Child id should be empty for all the current cases.
@@ -131,7 +141,6 @@ func (n *Node) doExecute(c *req.Context) error {
 			}
 			// Create edge from parent to child
 			var i x.Instruction
-			i.Operation = x.ADD
 			i.SubjectId = n.id
 			i.SubjectType = n.kind
 			i.Predicate = child.kind

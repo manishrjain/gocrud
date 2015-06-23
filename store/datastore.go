@@ -35,10 +35,6 @@ func (ds *Datastore) getIKey(i x.Instruction, tablePrefix string) *datastore.Key
 
 func (ds *Datastore) Commit(t string, i x.Instruction) bool {
 	dkey := ds.getIKey(i, t)
-	if i.Operation == x.NOOP {
-		log.WithField("instr", i).Error("Found NOOP instruction")
-		return false
-	}
 	if _, err := datastore.Put(ds.ctx, dkey, &i); err != nil {
 		x.LogErr(log, err).WithField("instr", i).Error("While adding instruction")
 		return false

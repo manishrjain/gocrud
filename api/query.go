@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"github.com/crud/req"
 	"github.com/crud/x"
@@ -79,10 +80,12 @@ func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr erro
 	if len(its) == 0 {
 		return new(Result), nil
 	}
+	sort.Sort(x.Its(its))
 
 	follow := make(map[string]*Query)
 	for _, child := range q.children {
 		follow[child.kind] = child
+		log.WithField("kind", child.kind).WithField("child", child).Debug("Following")
 	}
 
 	result = new(Result)
@@ -112,7 +115,8 @@ func (q *Query) doRun(c *req.Context, level, max int) (result *Result, rerr erro
 
 		if child, fw := follow[it.Predicate]; fw {
 			child.id = it.ObjectId
-			if cr, err := child.doRun(c, level+1, max); err == nil {
+			// Use child's maxDepth here, instead of parent's.
+			if cr, err := child.doRun(c, 0, child.maxDepth); err == nil {
 				if len(cr.Id) > 0 && len(cr.Kind) > 0 {
 					result.Children = append(result.Children, cr)
 				}

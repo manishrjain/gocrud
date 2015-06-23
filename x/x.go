@@ -18,14 +18,6 @@ type Status struct {
 	Message string `json:"message"`
 }
 
-const (
-	NOOP                      = 0
-	ADD                       = 1
-	REMOVE                    = 10
-	REPLACE_ONE_PER_PREDICATE = 20
-	REPLACE_ONE_PER_SOURCE    = 21
-)
-
 type Instruction struct {
 	SubjectId   string `json:"subject_id,omitempty"`
 	SubjectType string `json:"subject_type,omitempty"`
@@ -34,7 +26,6 @@ type Instruction struct {
 	ObjectId    string `json:"object_id,omitempty"`
 	NanoTs      int64  `json:"nano_ts,omitempty"`
 	Source      string `json:"source,omitempty"`
-	Operation   int    `json:"operation,omitempty"`
 }
 
 type Its []Instruction
