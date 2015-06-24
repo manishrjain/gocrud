@@ -6,8 +6,7 @@ var log = x.Log("store")
 
 type Store interface {
 	Init(string)
-	Commit(string, []*x.Instruction) error
-	IsNew(string, string) bool
-	GetEntity(string, string) ([]x.Instruction, error)
-	// ReadEntity(string, string) (x.Node, error)
+	Commit(tablePrefix string, its []*x.Instruction) error
+	IsNew(tablePrefix string, subject string) bool
+	GetEntity(tablePrefix string, subject string) ([]x.Instruction, error)
 }
