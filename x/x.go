@@ -2,6 +2,7 @@ package x
 
 import (
 	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -26,6 +27,60 @@ type Instruction struct {
 	ObjectId    string `json:"object_id,omitempty"`
 	NanoTs      int64  `json:"nano_ts,omitempty"`
 	Source      string `json:"source,omitempty"`
+}
+
+func (i *Instruction) GobEncode() ([]byte, error) {
+	w := new(bytes.Buffer)
+	enc := gob.NewEncoder(w)
+	if err := enc.Encode(i.SubjectId); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.SubjectType); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.Predicate); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.Object); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.ObjectId); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.NanoTs); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(i.Source); err != nil {
+		return nil, err
+	}
+	return w.Bytes(), nil
+}
+
+func (i *Instruction) GobDecode(buf []byte) error {
+	r := bytes.NewBuffer(buf)
+	dec := gob.NewDecoder(r)
+	if err := dec.Decode(&i.SubjectId); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.SubjectType); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.Predicate); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.Object); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.ObjectId); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.NanoTs); err != nil {
+		return err
+	}
+	if err := dec.Decode(&i.Source); err != nil {
+		return err
+	}
+	return nil
 }
 
 type Its []Instruction

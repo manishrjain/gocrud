@@ -9,8 +9,6 @@ import (
 	"google.golang.org/cloud/datastore"
 )
 
-var log = x.Log("store")
-
 type Datastore struct {
 	ctx context.Context
 }
@@ -33,14 +31,18 @@ func (ds *Datastore) getIKey(i x.Instruction, tablePrefix string) *datastore.Key
 	return datastore.NewIncompleteKey(ds.ctx, tablePrefix+"Instruction", skey)
 }
 
-func (ds *Datastore) Commit(t string, i x.Instruction) bool {
-	dkey := ds.getIKey(i, t)
-	if _, err := datastore.Put(ds.ctx, dkey, &i); err != nil {
-		x.LogErr(log, err).WithField("instr", i).Error("While adding instruction")
-		return false
+func (ds *Datastore) Commit(t string, its []*x.Instruction) error {
+	var keys []*datastore.Key
+	for _, i := range its {
+		dkey := ds.getIKey(*i, t)
+		keys = append(keys, dkey)
 	}
-	// Mark Subject as dirty.
-	return true
+	if _, err := datastore.PutMulti(ds.ctx, keys, its); err != nil {
+		x.LogErr(log, err).Error("While committing instructions")
+		return err
+	}
+	log.Debugf("%d Instructions committed", len(its))
+	return nil
 }
 
 func (ds *Datastore) IsNew(t, id string) bool {

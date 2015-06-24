@@ -81,14 +81,14 @@ func (n *Node) Print() *Node {
 	return n
 }
 
-func (n *Node) doExecute(c *req.Context) error {
+func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	for pred, val := range n.edges {
 		if len(n.source) == 0 {
 			return errors.New(fmt.Sprintf(
 				"No source specified for id: %v kind: %v", n.id, n.kind))
 		}
 
-		var i x.Instruction
+		i := new(x.Instruction)
 		i.SubjectId = n.id
 		i.SubjectType = n.kind
 		i.Predicate = pred
@@ -100,13 +100,8 @@ func (n *Node) doExecute(c *req.Context) error {
 		}
 		i.Source = n.source
 		i.NanoTs = n.Timestamp
-		log.WithField("instruction", i).Debug("Committing")
-		if ok := c.Store.Commit(c.TablePrefix, i); !ok {
-			log.WithField("node", n).Error("Committing")
-			return errors.New("While commiting node")
-		} else {
-			log.WithField("id", n.id).Debug("Committed")
-		}
+		log.WithField("instruction", i).Debug("Pushing to list")
+		*its = append(*its, i)
 	}
 
 	if len(n.children) == 0 {
@@ -129,33 +124,31 @@ func (n *Node) doExecute(c *req.Context) error {
 	// This would remove all children with a 'deleted' edge.
 
 	for _, child := range n.children {
-		if len(child.id) == 0 {
-			// Child id should be empty for all the current cases.
-			for {
-				child.id = x.UniqueString(5)
-				log.WithField("id", child.id).Debug("Checking availability of new id")
-				if isnew := c.Store.IsNew(c.TablePrefix, child.id); isnew {
-					log.WithField("id", child.id).Debug("New id available")
-					break
-				}
-			}
-			// Create edge from parent to child
-			var i x.Instruction
-			i.SubjectId = n.id
-			i.SubjectType = n.kind
-			i.Predicate = child.kind
-			i.ObjectId = child.id
-			i.Source = n.source
-			i.NanoTs = n.Timestamp
-			log.WithField("instruction", i).Debug("Committing")
-			if ok := c.Store.Commit(c.TablePrefix, i); !ok {
-				log.WithField("child_node", child).Error("Committing")
-				return errors.New("While commiting child")
-			} else {
-				log.WithField("id", n.id).WithField("child_id", child.id).Debug("Committed")
+		if len(child.id) > 0 {
+			log.WithField("child_id", child.id).Fatal(
+				"Child id should be empty for all current use cases")
+			return errors.New("Non empty child id")
+		}
+
+		for {
+			child.id = x.UniqueString(5)
+			log.WithField("id", child.id).Debug("Checking availability of new id")
+			if isnew := c.Store.IsNew(c.TablePrefix, child.id); isnew {
+				log.WithField("id", child.id).Debug("New id available")
+				break
 			}
 		}
-		if err := child.doExecute(c); err != nil {
+		// Create edge from parent to child
+		i := new(x.Instruction)
+		i.SubjectId = n.id
+		i.SubjectType = n.kind
+		i.Predicate = child.kind
+		i.ObjectId = child.id
+		i.Source = n.source
+		i.NanoTs = n.Timestamp
+		log.WithField("instruction", i).Debug("Pushing to list")
+		*its = append(*its, i)
+		if err := child.doExecute(c, its); err != nil {
 			return err
 		}
 	}
@@ -164,5 +157,15 @@ func (n *Node) doExecute(c *req.Context) error {
 
 func (n *Node) Execute(c *req.Context) error {
 	n = n.root()
-	return n.doExecute(c)
+
+	var its []*x.Instruction
+	err := n.doExecute(c, &its)
+	if err != nil {
+		return err
+	}
+	if len(its) == 0 {
+		return errors.New("No instructions generated")
+	}
+
+	return c.Store.Commit(c.TablePrefix, its)
 }

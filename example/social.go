@@ -64,9 +64,12 @@ func main() {
 	fmt.Println("Running...")
 
 	c = new(req.Context)
-	c.TablePrefix = "MRJN-"
-	c.Store = new(store.Datastore)
-	c.Store.Init("supportx-backend")
+	{
+		l := new(store.Leveldb)
+		l.SetBloomFilter(13)
+		c.Store = l
+	}
+	c.Store.Init("/tmp/ldb_" + x.UniqueString(10))
 
 	var err error
 	uid := newUser()
