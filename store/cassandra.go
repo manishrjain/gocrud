@@ -1,24 +1,36 @@
 package store
 
 import (
+	"fmt"
+
+	_ "github.com/cloudflare/cfssl/log" // My goimports is going nuts
 	"github.com/crud/x"
 	"github.com/gocql/gocql"
 )
 
 type Cassandra struct {
 	session *gocql.Session
-	table   string
+	// table   string
+}
+
+var kIsNew, kInsert, kSelect string
+
+func (cs *Cassandra) SetSession(session *gocql.Session) {
+	cs.session = session
 }
 
 func (cs *Cassandra) Init(tablename string) {
-	cs.table = tablename
+	// cs.table = tablename
+	kIsNew = fmt.Sprintf("select subject_id from %s where subject_id = ?", tablename)
+	kInsert = fmt.Sprintf(`insert into %s (ts, subject_id, subject_type, predicate,
+object, object_id, nano_ts, source) values (now(), ?, ?, ?, ?, ?, ?, ?)`, tablename)
+	kSelect = fmt.Sprintf(`select subject_id, subject_type, predicate, object,
+object_id, nano_ts, source from %s where subject_id = ?`, tablename)
 }
 
-const kIsNew = `select subject_id from ? where subject_id = ?`
-
 func (cs *Cassandra) IsNew(_ string, subject string) bool {
-	iter := cs.session.Query(kIsNew, cs.table, subject).Iter()
-	var sid
+	iter := cs.session.Query(kIsNew, subject).Iter()
+	var sid string
 	isnew := true
 	for iter.Scan(&sid) {
 		isnew = false
@@ -31,7 +43,29 @@ func (cs *Cassandra) IsNew(_ string, subject string) bool {
 }
 
 func (cs *Cassandra) Commit(_ string, its []*x.Instruction) error {
+	b := cs.session.NewBatch(gocql.LoggedBatch)
+	for _, it := range its {
+		b.Query(kInsert, it.SubjectId, it.SubjectType, it.Predicate,
+			it.Object, it.ObjectId, it.NanoTs, it.Source)
+	}
+	if err := cs.session.ExecuteBatch(b); err != nil {
+		x.LogErr(log, err).Error("While executing batch")
+	}
+	log.Debugf("Stored %d instructions", len(its))
+	return nil
 }
 
-func (cs *Cassandra) GetEntity(_ string, subject string) (result []x.Instruction, rerr error) {
+func (cs *Cassandra) GetEntity(_ string, subject string) (
+	result []x.Instruction, rerr error) {
+	iter := cs.session.Query(kSelect, subject).Iter()
+	var i x.Instruction
+	for iter.Scan(&i.SubjectId, &i.SubjectType, &i.Predicate, &i.Object,
+		&i.ObjectId, &i.NanoTs, &i.Source) {
+		result = append(result, i)
+	}
+	if err := iter.Close(); err != nil {
+		x.LogErr(log, err).Error("While iterating")
+		return result, err
+	}
+	return result, nil
 }

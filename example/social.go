@@ -10,6 +10,7 @@ import (
 	"github.com/crud/req"
 	"github.com/crud/store"
 	"github.com/crud/x"
+	"github.com/gocql/gocql"
 )
 
 var log = x.Log("social")
@@ -59,17 +60,37 @@ func printAndGetUser(uid string) (user User) {
 	return user
 }
 
+const kUse = "cass"
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	fmt.Println("Running...")
 
 	c = new(req.Context)
-	{
+
+	if kUse == "leveldb" {
 		l := new(store.Leveldb)
 		l.SetBloomFilter(13)
 		c.Store = l
+		c.Store.Init("/tmp/ldb_" + x.UniqueString(10))
+
+	} else if kUse == "cass" {
+		cluster := gocql.NewCluster("192.168.59.103")
+		cluster.Keyspace = "crudtest"
+		cluster.Consistency = gocql.Quorum
+		cass := new(store.Cassandra)
+
+		if session, err := cluster.CreateSession(); err != nil {
+			panic(err)
+		} else {
+			cass.SetSession(session)
+		}
+		c.Store = cass
+		c.Store.Init("instructions")
+
+	} else {
+		panic("Invalid store")
 	}
-	c.Store.Init("/tmp/ldb_" + x.UniqueString(10))
 
 	var err error
 	uid := newUser()
