@@ -130,12 +130,15 @@ func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 			return errors.New("Non empty child id")
 		}
 
-		for {
+		for idx := 0; ; idx++ {
 			child.id = x.UniqueString(5)
 			log.WithField("id", child.id).Debug("Checking availability of new id")
 			if isnew := c.Store.IsNew(c.TablePrefix, child.id); isnew {
 				log.WithField("id", child.id).Debug("New id available")
 				break
+			}
+			if idx >= 30 {
+				return errors.New("Unable to find new id")
 			}
 		}
 		// Create edge from parent to child

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"math/rand"
 	"time"
@@ -14,6 +15,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
 )
+
+var storeType = flag.String("store", "leveldb",
+	"Available stores are cass for cassandra, "+
+		"sql for MySQL, leveldb for LevelDB, "+
+		"datastore for Google Datastore. "+
+		"LevelDB is the default.")
 
 var log = x.Log("social")
 var c *req.Context
@@ -62,21 +69,20 @@ func printAndGetUser(uid string) (user User) {
 	return user
 }
 
-const kUse = "mysql"
-
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	fmt.Println("Running...")
+	flag.Parse()
 
 	c = new(req.Context)
 
-	if kUse == "leveldb" {
+	if *storeType == "leveldb" {
 		l := new(store.Leveldb)
 		l.SetBloomFilter(13)
 		c.Store = l
 		c.Store.Init("/tmp/ldb_" + x.UniqueString(10))
 
-	} else if kUse == "cass" {
+	} else if *storeType == "cass" {
 		cluster := gocql.NewCluster("192.168.59.103")
 		cluster.Keyspace = "crudtest"
 		cluster.Consistency = gocql.Quorum
@@ -90,7 +96,7 @@ func main() {
 		c.Store = cass
 		c.Store.Init("instructions")
 
-	} else if kUse == "mysql" {
+	} else if *storeType == "mysql" {
 		db, err := sql.Open("mysql", "tcp(127.0.0.1:3306)/test")
 		if err != nil {
 			panic(err)
@@ -103,6 +109,11 @@ func main() {
 		sqldb.SetDb(db)
 		c.Store = sqldb
 		c.Store.Init("instructions")
+
+	} else if *storeType == "datastore" {
+		c.TablePrefix = "Test-"
+		c.Store = new(store.Datastore)
+		c.Store.Init("gce-project-id")
 
 	} else {
 		panic("Invalid store")
