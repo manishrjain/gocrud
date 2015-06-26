@@ -224,6 +224,30 @@ func main() {
 	fmt.Print("Added Comment on Like")
 	user = printAndGetUser(uid)
 
+	post = user.Post[0]
+	if len(post.Comment) == 0 {
+		log.Fatalf("No comment found: %+v", post)
+	}
+	comment = post.Comment[0]
+	p = api.Get("Comment", comment.Id).SetSource(newUser()).Set("delete", true)
+	err = p.Execute(c)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	user = printAndGetUser(uid)
+
+	q := api.NewQuery("User", uid).Collect("Post")
+	q.Collect("Like").UptoDepth(10)
+	q.Collect("Comment").UptoDepth(10).FilterOut("delete")
+	result, err := q.Run(c)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	js, err := result.ToJson()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	fmt.Printf("\n%s\n%s\n%s\n", sep, string(js), sep)
 	// By now we have a fairly complex Post structure. CRUD for
 	// which would have been a lot of work to put together using
 	// typical SQL / NoSQL tables.
