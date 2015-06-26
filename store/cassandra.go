@@ -1,5 +1,14 @@
 package store
 
+// To test this cassandra integration, run cassandra on docker
+// docker run -d --name cass -p 9042:9042 abh1nav/cassandra:latest
+// If on Mac, find the IP address of the docker host
+// $ boot2docker ip
+// 192.168.59.103
+// For linux it's 127.0.0.1.
+// Then, on Mac connect to it with
+// $ cqlsh 192.168.59.103 9042
+
 import (
 	"fmt"
 

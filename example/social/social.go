@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -10,6 +11,7 @@ import (
 	"github.com/crud/req"
 	"github.com/crud/store"
 	"github.com/crud/x"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
 )
 
@@ -60,7 +62,7 @@ func printAndGetUser(uid string) (user User) {
 	return user
 }
 
-const kUse = "cass"
+const kUse = "mysql"
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -86,6 +88,20 @@ func main() {
 			cass.SetSession(session)
 		}
 		c.Store = cass
+		c.Store.Init("instructions")
+
+	} else if kUse == "mysql" {
+		db, err := sql.Open("mysql", "tcp(127.0.0.1:3306)/test")
+		if err != nil {
+			panic(err)
+		}
+		if err = db.Ping(); err != nil {
+			panic(err)
+		}
+		log.Info("Connection to mysql successful")
+		sqldb := new(store.Sql)
+		sqldb.SetDb(db)
+		c.Store = sqldb
 		c.Store.Init("instructions")
 
 	} else {
