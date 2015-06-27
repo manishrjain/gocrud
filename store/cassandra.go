@@ -18,7 +18,6 @@ import (
 
 type Cassandra struct {
 	session *gocql.Session
-	// table   string
 }
 
 var kIsNew, kInsert, kSelect string
@@ -27,8 +26,7 @@ func (cs *Cassandra) SetSession(session *gocql.Session) {
 	cs.session = session
 }
 
-func (cs *Cassandra) Init(tablename string, _ string) {
-	// cs.table = tablename
+func (cs *Cassandra) Init(_, tablename string) {
 	kIsNew = fmt.Sprintf("select subject_id from %s where subject_id = ?", tablename)
 	kInsert = fmt.Sprintf(`insert into %s (ts, subject_id, subject_type, predicate,
 object, object_id, nano_ts, source) values (now(), ?, ?, ?, ?, ?, ?, ?)`, tablename)
