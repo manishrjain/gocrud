@@ -9,7 +9,6 @@ package store
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/manishrjain/gocrud/x"
 )
 
@@ -75,8 +74,6 @@ func (rdb *RethinkDB) GetEntity(_ string, subject string) (
 		x.LogErr(log, err).Error("While closing iterator")
 		return result, err
 	}
-
-	spew.Dump(result)
 
 	return result, nil
 }
