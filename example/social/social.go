@@ -97,7 +97,7 @@ func main() {
 		c.Store.Init("instructions")
 
 	} else if *storeType == "mysql" {
-		db, err := sql.Open("mysql", "tcp(127.0.0.1:3306)/test")
+		db, err := sql.Open("mysql", "root@tcp(127.0.0.1:3306)/test")
 		if err != nil {
 			panic(err)
 		}

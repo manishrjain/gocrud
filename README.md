@@ -261,3 +261,34 @@ go build example/server/server.go
 These are fairly complex operations on fairly complex data structure,
 CRUD for which would have been a lot of work to put together using typical
 SQL / NoSQL table approach.
+
+## Performance considerations
+For the above example, this is what gets stored in the database (data not exactly the same as above example)
+```
+mysql> select * from instructions;
++------------+--------------+-----------+--------------------------------------+-----------+---------------------+---------+----+
+| subject_id | subject_type | predicate | object                               | object_id | nano_ts             | source  | id |
++------------+--------------+-----------+--------------------------------------+-----------+---------------------+---------+----+
+| uid_oNM    | User         | Post      | NULL                                 | wClGp     | 1435408916326573229 | uid_oNM |  1 |
+| wClGp      | Post         | body      | "You can search for cat videos here" |           | 1435408916326573229 | uid_oNM |  2 |
+| wClGp      | Post         | tags      | ["search","cat","videos"]            |           | 1435408916326573229 | uid_oNM |  3 |
+| wClGp      | Post         | url       | "www.google.com"                     |           | 1435408916326573229 | uid_oNM |  4 |
+| wClGp      | Post         | Like      | NULL                                 | kStx9     | 1435408916341828408 | uid_qB3 |  5 |
+| kStx9      | Like         | thumb     | 1                                    |           | 1435408916341828408 | uid_qB3 |  6 |
+| wClGp      | Post         | Comment   | NULL                                 | 8f78r     | 1435408916341828408 | uid_qB3 |  7 |
+| 8f78r      | Comment      | body      | "Comment by on the post"             |           | 1435408916341828408 | uid_qB3 |  8 |
+| wClGp      | Post         | Like      | NULL                                 | Gyd7G     | 1435408916352622582 | uid_a30 |  9 |
+| Gyd7G      | Like         | thumb     | 1                                    |           | 1435408916352622582 | uid_a30 | 10 |
+| 8f78r      | Comment      | Like      | NULL                                 | q2IKK     | 1435408916357443075 | uid_I5u | 11 |
+| q2IKK      | Like         | thumb     | 1                                    |           | 1435408916357443075 | uid_I5u | 12 |
+| 8f78r      | Comment      | Comment   | NULL                                 | g8llL     | 1435408916357443075 | uid_I5u | 13 |
+| g8llL      | Comment      | body      | "Comment xv on comment"              |           | 1435408916357443075 | uid_I5u | 14 |
+| q2IKK      | Like         | Comment   | NULL                                 | oaztb     | 1435408916368908590 | uid_SPX | 15 |
+| oaztb      | Comment      | body      | "Comment kL on Like"                 |           | 1435408916368908590 | uid_SPX | 16 |
+| 8f78r      | Comment      | censored  | true                                 |           | 1435408916377065650 | uid_D2g | 17 |
+| kStx9      | Like         | _delete_  | true                                 |           | 1435408916384422689 | uid_2a5 | 18 |
++------------+--------------+-----------+--------------------------------------+-----------+---------------------+---------+----+
+18 rows in set (0.00 sec)
+```
+
+The writes are in constant time. Some of the performance concerns would be around retrieval. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity and it's children. Also, any property filtering that needs to happen would happen in application space, instead of within database. I have ideas around continuous background processing to generate commonly needed data structures, and store them in separate tables to allow for database native querying capabilities, and 1 row read per entity. But, more work on that, if this library finds usage among the Golang crowd.
