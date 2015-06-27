@@ -1,6 +1,6 @@
 package store
 
-import "github.com/gocrud/x"
+import "github.com/manishrjain/gocrud/x"
 
 var log = x.Log("store")
 

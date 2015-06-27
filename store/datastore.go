@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/x"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
