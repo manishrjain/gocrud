@@ -1,6 +1,8 @@
 # gocrud
 Go library to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
+[Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
+
 This library is built to allow these properties for the data:
 
 1. **Versioning**: Keep track of all edits to the data, including deletion operations.
@@ -40,13 +42,16 @@ The data is stored in a flat “tuple” format, to allow for horizontal scaling
 
 ## Example Usage
 
-Let's take a social backend as an example (based upon example/social/social.go)
+Let's take a social backend as an example ([based on social.go](example/social/social.go))
 - Users create posts
 - Other users like Posts
 - Other users comment on Posts
 - Other users like the comments
-- Other users comment on the comment
-- Other users like the comment on the comment
+- Other users comment on the comment (aka reply)
+- (Extra) Other users like the comment on the comment
+- (Extra) Other users comment on the like
+
+![Social data structures](res/social_graph.bmp)
 
 A typical table for a Post would be like this:
 
