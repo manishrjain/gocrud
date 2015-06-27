@@ -18,19 +18,33 @@ func (s *Sql) SetDb(db *sql.DB) {
 	s.db = db
 }
 
-func (s *Sql) Init(tablename string) {
-	insert := fmt.Sprintf(`insert into %s (subject_id, subject_type, predicate,
+func (s *Sql) Init(dbtype string, tablename string) {
+	var insert string
+	switch dbtype {
+	case "postgres":
+		insert = fmt.Sprintf(`insert into %s (subject_id, subject_type, predicate,
+	object, object_id, nano_ts, source) values ($1, $2, $3, $4, $5, $6, $7)`, tablename)
+		sqlIsNew = fmt.Sprintf("select subject_id from %s where subject_id = $1 limit 1",
+			tablename)
+		sqlSelect = fmt.Sprintf(`select subject_id, subject_type, predicate,
+	object, object_id, nano_ts, source from %s where subject_id = $1`, tablename)
+
+	default:
+		insert = fmt.Sprintf(`insert into %s (subject_id, subject_type, predicate,
 	object, object_id, nano_ts, source) values (?, ?, ?, ?, ?, ?, ?)`, tablename)
+		sqlIsNew = fmt.Sprintf("select subject_id from %s where subject_id = ? limit 1",
+			tablename)
+		sqlSelect = fmt.Sprintf(`select subject_id, subject_type, predicate,
+	object, object_id, nano_ts, source from %s where subject_id = ?`, tablename)
+
+	}
+
 	var err error
 	sqlInsert, err = s.db.Prepare(insert)
 	if err != nil {
 		panic(err)
 	}
 
-	sqlIsNew = fmt.Sprintf("select subject_id from %s where subject_id = ? limit 1",
-		tablename)
-	sqlSelect = fmt.Sprintf(`select subject_id, subject_type, predicate,
-	object, object_id, nano_ts, source from %s where subject_id = ?`, tablename)
 }
 
 func (s *Sql) IsNew(_ string, subject string) bool {

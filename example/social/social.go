@@ -10,10 +10,11 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
-	"github.com/gocrud/api"
-	"github.com/gocrud/req"
-	"github.com/gocrud/store"
-	"github.com/gocrud/x"
+	_ "github.com/lib/pq"
+	"github.com/manishrjain/gocrud/api"
+	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/store"
+	"github.com/manishrjain/gocrud/x"
 )
 
 var storeType = flag.String("store", "leveldb",
@@ -80,7 +81,7 @@ func main() {
 		l := new(store.Leveldb)
 		l.SetBloomFilter(13)
 		c.Store = l
-		c.Store.Init("/tmp/ldb_" + x.UniqueString(10))
+		c.Store.Init(*storeType, "/tmp/ldb_"+x.UniqueString(10))
 
 	} else if *storeType == "cass" {
 		cluster := gocql.NewCluster("192.168.59.103")
@@ -94,7 +95,7 @@ func main() {
 			cass.SetSession(session)
 		}
 		c.Store = cass
-		c.Store.Init("instructions")
+		c.Store.Init(*storeType, "instructions")
 
 	} else if *storeType == "mysql" {
 		db, err := sql.Open("mysql", "root@tcp(127.0.0.1:3306)/test")
@@ -108,12 +109,26 @@ func main() {
 		sqldb := new(store.Sql)
 		sqldb.SetDb(db)
 		c.Store = sqldb
-		c.Store.Init("instructions")
+		c.Store.Init(*storeType, "instructions")
+
+	} else if *storeType == "postgres" {
+		db, err := sql.Open("postgres", "postgres://localhost/test?sslmode=disable")
+		if err != nil {
+			panic(err)
+		}
+		if err = db.Ping(); err != nil {
+			panic(err)
+		}
+		log.Info("Connection to postgres successful")
+		sqldb := new(store.Sql)
+		sqldb.SetDb(db)
+		c.Store = sqldb
+		c.Store.Init(*storeType, "instructions")
 
 	} else if *storeType == "datastore" {
 		c.TablePrefix = "Test-"
 		c.Store = new(store.Datastore)
-		c.Store.Init("gce-project-id")
+		c.Store.Init(*storeType, "gce-project-id")
 
 	} else {
 		panic("Invalid store")

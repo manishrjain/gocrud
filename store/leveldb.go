@@ -22,7 +22,7 @@ func (l *Leveldb) SetBloomFilter(bits int) {
 	}
 }
 
-func (l *Leveldb) Init(filepath string) {
+func (l *Leveldb) Init(_ string, filepath string) {
 	var err error
 	l.db, err = leveldb.OpenFile(filepath, l.opt)
 	if err != nil {
