@@ -3,9 +3,9 @@ package helper
 import (
 	"net/http"
 
-	"github.com/gocrud/api"
-	"github.com/gocrud/req"
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/api"
+	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/x"
 )
 
 type Entity struct {

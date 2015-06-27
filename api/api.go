@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/gocrud/req"
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/x"
 )
 
 var log = x.Log("api")

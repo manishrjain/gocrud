@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gocrud/api"
-	"github.com/gocrud/helper"
-	"github.com/gocrud/req"
-	"github.com/gocrud/store"
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/api"
+	"github.com/manishrjain/gocrud/helper"
+	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/store"
+	"github.com/manishrjain/gocrud/x"
 )
 
 var log = x.Log("server")

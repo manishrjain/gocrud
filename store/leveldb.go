@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/x"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -22,7 +22,7 @@ func (l *Leveldb) SetBloomFilter(bits int) {
 	}
 }
 
-func (l *Leveldb) Init(filepath string) {
+func (l *Leveldb) Init(_ string, filepath string) {
 	var err error
 	l.db, err = leveldb.OpenFile(filepath, l.opt)
 	if err != nil {

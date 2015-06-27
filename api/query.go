@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/gocrud/req"
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/x"
 )
 
 type Query struct {

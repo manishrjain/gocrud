@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/x"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -13,7 +13,7 @@ type Datastore struct {
 	ctx context.Context
 }
 
-func (ds *Datastore) Init(project string) {
+func (ds *Datastore) Init(_ string, project string) {
 	client, err := google.DefaultClient(oauth2.NoContext,
 		"https://www.googleapis.com/auth/devstorage.full_control")
 	if err != nil {

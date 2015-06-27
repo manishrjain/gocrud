@@ -13,7 +13,7 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
-	"github.com/gocrud/x"
+	"github.com/manishrjain/gocrud/x"
 )
 
 type Cassandra struct {
@@ -27,7 +27,7 @@ func (cs *Cassandra) SetSession(session *gocql.Session) {
 	cs.session = session
 }
 
-func (cs *Cassandra) Init(tablename string) {
+func (cs *Cassandra) Init(tablename string, _ string) {
 	// cs.table = tablename
 	kIsNew = fmt.Sprintf("select subject_id from %s where subject_id = ?", tablename)
 	kInsert = fmt.Sprintf(`insert into %s (ts, subject_id, subject_type, predicate,
