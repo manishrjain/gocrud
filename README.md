@@ -106,16 +106,34 @@ l := api.Get("Like", likeid).SetSource(userid)
 l.AddChild("Comment").Set("body", "Nice that you like this").Execute(ctx)
 ```
 
+##### Add some property `censored`
+```go
+api.Get("Comment", commentid).SetSource(uid).Set("censored", true).Execute(ctx)
+```
+
+##### Mark deleted
+Something marked as deleted would never be retrieved.
+```go
+api.Get("Like", like.Id).SetSource(newUser()).MarkDeleted().Execute(ctx)
+```
+
 ##### Read User
 Now finally, read it all back
 ```go
-result, _ := api.NewQuery("User", userid).UptoDepth(10).Run(ctx)
-js := result.ToJson()
-// or directly to http.ResponseWriter
+q := api.NewQuery("User", uid).Collect("Post")
+// Note that Collect() on a node would return child node query pointer,
+// and run operations there.
+q.Collect("Like").UptoDepth(10)
+q.Collect("Comment").UptoDepth(10).FilterOut("censored")
+result, err := q.Run(c)
+js, err := result.ToJson()
+
+// or directly to w http.ResponseWriter
 result.WriteJsonResponse(w)
 ```
 
 Sample result produced:
+Full JSON
 ```json
 {
     "Post": [
@@ -124,128 +142,102 @@ Sample result produced:
                 {
                     "Comment": [
                         {
-                            "body": "Comment n7 on comment",
-                            "id": "BxOOW",
+                            "body": "Comment di on comment",
+                            "id": "w0YDg",
                             "kind": "Comment",
-                            "source": "uid_8pp",
-                            "ts_millis": 1435307175177
+                            "source": "uid_IxD",
+                            "ts_millis": 1435373783693
                         }
                     ],
                     "Like": [
                         {
                             "Comment": [
                                 {
-                                    "body": "Comment sE on Like",
-                                    "id": "soRYW",
+                                    "body": "Comment j3 on Like",
+                                    "id": "O1Kqv",
                                     "kind": "Comment",
-                                    "source": "uid_IG3",
-                                    "ts_millis": 1435307175178
+                                    "source": "uid_avi",
+                                    "ts_millis": 1435373783695
                                 }
                             ],
-                            "id": "pCJYt",
+                            "id": "PYuUz",
                             "kind": "Like",
-                            "source": "uid_8pp",
+                            "source": "uid_IxD",
                             "thumb": 1,
-                            "ts_millis": 1435307175177
+                            "ts_millis": 1435373783693
                         }
                     ],
-                    "body": "Comment 2q on the post",
-                    "id": "KfMbk",
+                    "body": "Comment gI on the post",
+                    "censored": true,
+                    "id": "xcbbG",
                     "kind": "Comment",
-                    "source": "uid_u2K",
-                    "ts_millis": 1435307175175
+                    "source": "uid_rfV",
+                    "ts_millis": 1435373783696
                 }
             ],
             "Like": [
                 {
-                    "id": "2ZZiT",
+                    "id": "h5izf",
                     "kind": "Like",
-                    "source": "uid_u2K",
+                    "source": "uid_uQf",
                     "thumb": 1,
-                    "ts_millis": 1435307175175
+                    "ts_millis": 1435373783691
                 },
                 {
-                    "id": "pKgC6",
+                    "id": "3P1RK",
                     "kind": "Like",
-                    "source": "uid_rWp",
+                    "source": "uid_Nab",
                     "thumb": 1,
-                    "ts_millis": 1435307175176
+                    "ts_millis": 1435373783692
                 }
             ],
             "body": "You can search for cat videos here",
-            "id": "noqoK",
+            "id": "6MV1v",
             "kind": "Post",
-            "source": "uid_OvZ",
+            "source": "uid_rWe",
             "tags": [
                 "search",
                 "cat",
                 "videos"
             ],
-            "ts_millis": 1435307175174,
+            "ts_millis": 1435373783690,
             "url": "www.google.com"
         }
     ],
-    "id": "uid_OvZ",
+    "id": "uid_rWe",
     "kind": "User",
     "ts_millis": 0
 }
 ```
 
-##### Mark comment as deleted
-```go
-api.Get("Comment", commentid).SetSource(uid).Set("delete", true).Execute(ctx)
-```
-
-Output with delete bit (not formatted to save space)
-```json
-{"Post":[{"Comment":[{"Comment":[{"body":"Comment Sz on comment","id":"zphZb","kind":"Comment","source":"uid_qXn","ts_millis":1435308540605}],"Like":[{"Comment":[{"body":"Comment hq on Like","id":"fsvhu","kind":"Comment","source":"uid_fo7","ts_millis":1435308540607}],"id":"BJtmc","kind":"Like","source":"uid_qXn","thumb":1,"ts_millis":1435308540605}],"body":"Comment o1 on the post","delete":true,"id":"frHAX","kind":"Comment","source":"uid_Nin","ts_millis":1435308540608}],"Like":[{"id":"3EbAT","kind":"Like","source":"uid_eVH","thumb":1,"ts_millis":1435308540604},{"id":"cQBTg","kind":"Like","source":"uid_Xhd","thumb":1,"ts_millis":1435308540604}],"body":"You can search for cat videos here","id":"au1t6","kind":"Post","source":"uid_MWp","tags":["search","cat","videos"],"ts_millis":1435308540603,"url":"www.google.com"}],"id":"uid_MWp","kind":"User","ts_millis":0}
-```
-
-##### Filter out deleted comments
-```go
-	q := api.NewQuery("User", uid).Collect("Post")  // q points to Post entity
-	q.Collect("Comment").UptoDepth(10).FilterOut("delete")  // FilterOut is run on Comment entity, under Post under User.
-	q.Collect("Like").UptoDepth(10)  // No Comments under Like would be filtered out.
-	// The pattern is `ptr_to_some_entity := q.Collect("SomeEntity")`
-	result, _ := q.Run(ctx)
-	js, _ := result.ToJson()
-```
-
-Note that Collect() on a node would return child node query pointer, and run operations there.
+JSON produced after removing node with `censored`, and the deleted nodes.
 ```json
 {
     "Post": [
         {
             "Like": [
                 {
-                    "id": "jHt9w",
+                    "id": "3P1RK",
                     "kind": "Like",
-                    "source": "uid_TwW",
+                    "source": "uid_Nab",
                     "thumb": 1,
-                    "ts_millis": 1435308910056
-                },
-                {
-                    "id": "jHt9w",
-                    "kind": "Like",
-                    "source": "uid_TwW",
-                    "thumb": 1,
-                    "ts_millis": 1435308910056
+                    "ts_millis": 1435373783692
                 }
             ],
             "body": "You can search for cat videos here",
-            "id": "nrlV4",
+            "id": "6MV1v",
             "kind": "Post",
-            "source": "uid_5Ve",
+            "source": "uid_rWe",
             "tags": [
                 "search",
                 "cat",
                 "videos"
             ],
-            "ts_millis": 1435308910054,
+            "ts_millis": 1435373783690,
             "url": "www.google.com"
         }
     ],
-    "id": "uid_5Ve",
+    "id": "uid_rWe",
     "kind": "User",
     "ts_millis": 0
 }

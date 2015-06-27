@@ -143,7 +143,8 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 
 			// Use child's maxDepth here, instead of parent's.
 			waitTimes += 1
-			log.WithField("child_id", nchildq.id).WithField("child_kind", nchildq.kind).Debug("Go routine for child")
+			log.WithField("child_id", nchildq.id).
+				WithField("child_kind", nchildq.kind).Debug("Go routine for child")
 			go nchildq.doRun(c, 0, nchildq.maxDepth, childChan)
 			continue
 		}
@@ -153,9 +154,13 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 			child.id = it.ObjectId
 
 			waitTimes += 1
+			log.WithField("child_id", child.id).WithField("level", level+1).
+				Debug("Go routine for child one level deeper")
 			go child.doRun(c, level+1, max, childChan)
 		}
 	}
+
+	// Wait for all those subroutines
 	for i := 0; i < waitTimes; i++ {
 		log.Debugf("Waiting for children subroutines: %v/%v", i, waitTimes-1)
 		rr := <-childChan

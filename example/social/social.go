@@ -234,6 +234,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+	q := api.NewQuery("Comment", comment.Id).UptoDepth(0)
+	result, err := q.Run(c)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	js, err := result.ToJson()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	fmt.Printf("\n%s\n%s\n%s\n", sep, string(js), sep)
 	user = printAndGetUser(uid)
 
 	post = user.Post[0]
@@ -247,14 +257,14 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 
-	q := api.NewQuery("User", uid).Collect("Post")
+	q = api.NewQuery("User", uid).Collect("Post")
 	q.Collect("Like").UptoDepth(10)
 	q.Collect("Comment").UptoDepth(10).FilterOut("censored")
-	result, err := q.Run(c)
+	result, err = q.Run(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	js, err := result.ToJson()
+	js, err = result.ToJson()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
