@@ -12,7 +12,6 @@ package store
 import (
 	"fmt"
 
-	_ "github.com/cloudflare/cfssl/log" // My goimports is going nuts
 	"github.com/gocql/gocql"
 	"github.com/gocrud/x"
 )
@@ -60,7 +59,7 @@ func (cs *Cassandra) Commit(_ string, its []*x.Instruction) error {
 	if err := cs.session.ExecuteBatch(b); err != nil {
 		x.LogErr(log, err).Error("While executing batch")
 	}
-	log.Debugf("Stored %d instructions", len(its))
+	log.WithField("len", len(its)).Debug("Stored instructions")
 	return nil
 }
 
