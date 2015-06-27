@@ -13,8 +13,8 @@ import (
 	"fmt"
 
 	_ "github.com/cloudflare/cfssl/log" // My goimports is going nuts
-	"github.com/crud/x"
 	"github.com/gocql/gocql"
+	"github.com/gocrud/x"
 )
 
 type Cassandra struct {

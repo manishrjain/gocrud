@@ -8,12 +8,12 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/crud/api"
-	"github.com/crud/req"
-	"github.com/crud/store"
-	"github.com/crud/x"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
+	"github.com/gocrud/api"
+	"github.com/gocrud/req"
+	"github.com/gocrud/store"
+	"github.com/gocrud/x"
 )
 
 var storeType = flag.String("store", "leveldb",
@@ -229,16 +229,27 @@ func main() {
 		log.Fatalf("No comment found: %+v", post)
 	}
 	comment = post.Comment[0]
-	p = api.Get("Comment", comment.Id).SetSource(newUser()).Set("delete", true)
+	p = api.Get("Comment", comment.Id).SetSource(newUser()).Set("censored", true)
 	err = p.Execute(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 	user = printAndGetUser(uid)
 
+	post = user.Post[0]
+	if len(post.Like) == 0 {
+		log.Fatalf("No like found: %+v", post)
+	}
+	like = post.Like[0]
+	p = api.Get("Like", like.Id).SetSource(newUser()).MarkDeleted()
+	err = p.Execute(c)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	q := api.NewQuery("User", uid).Collect("Post")
 	q.Collect("Like").UptoDepth(10)
-	q.Collect("Comment").UptoDepth(10).FilterOut("delete")
+	q.Collect("Comment").UptoDepth(10).FilterOut("censored")
 	result, err := q.Run(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)

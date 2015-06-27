@@ -1,6 +1,6 @@
 package req
 
-import "github.com/crud/store"
+import "github.com/gocrud/store"
 
 type Context struct {
 	TablePrefix string

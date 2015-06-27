@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/crud/req"
-	"github.com/crud/x"
+	"github.com/gocrud/req"
+	"github.com/gocrud/x"
 )
 
 type Query struct {
@@ -105,8 +105,19 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 	waitTimes := 0
 	childChan := make(chan runResult)
 	for _, it := range its {
+		if it.Predicate == "_delete_" {
+			// If marked as deleted, don't return this node.
+			log.WithField("id", result.Id).
+				WithField("kind", result.Kind).
+				WithField("_delete_", true).
+				Debug("Discarding due to delete bit")
+			ch <- runResult{Result: new(Result), Err: nil}
+			return
+		}
+
 		if _, fout := q.filterOut[it.Predicate]; fout {
 			log.WithField("id", result.Id).
+				WithField("kind", result.Kind).
 				WithField("predicate", it.Predicate).
 				Debug("Discarding due to predicate filter")
 			ch <- runResult{Result: new(Result), Err: nil}
@@ -125,20 +136,15 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 			continue
 		}
 
-		if child, fw := follow[it.Predicate]; fw {
-			child.id = it.ObjectId
+		if childq, fw := follow[it.Predicate]; fw {
+			nchildq := new(Query)
+			*nchildq = *childq // This is important, otherwise id gets overwritten
+			nchildq.id = it.ObjectId
+
 			// Use child's maxDepth here, instead of parent's.
 			waitTimes += 1
-			go child.doRun(c, 0, child.maxDepth, childChan)
-			/*
-				if cr, err := child.doRun(c, 0, child.maxDepth); err == nil {
-					if len(cr.Id) > 0 && len(cr.Kind) > 0 {
-						result.Children = append(result.Children, cr)
-					}
-				} else {
-					x.LogErr(log, err).Error("While doRun")
-				}
-			*/
+			log.WithField("child_id", nchildq.id).WithField("child_kind", nchildq.kind).Debug("Go routine for child")
+			go nchildq.doRun(c, 0, nchildq.maxDepth, childChan)
 			continue
 		}
 
@@ -148,23 +154,17 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 
 			waitTimes += 1
 			go child.doRun(c, level+1, max, childChan)
-			/*
-				if cr, err := child.doRun(c, level+1, max); err == nil {
-					result.Children = append(result.Children, cr)
-				} else {
-					x.LogErr(log, err).Error("While doRun")
-				}
-			*/
 		}
 	}
 	for i := 0; i < waitTimes; i++ {
-		log.Debugf("Waiting for children subroutines: %v", i)
+		log.Debugf("Waiting for children subroutines: %v/%v", i, waitTimes-1)
 		rr := <-childChan
 		log.Debugf("Waiting done")
 		if rr.Err != nil {
 			x.LogErr(log, err).Error("While child doRun")
 		} else {
 			if len(rr.Result.Id) > 0 && len(rr.Result.Kind) > 0 {
+				log.WithField("result", *rr.Result).Debug("Appending child")
 				result.Children = append(result.Children, rr.Result)
 			}
 		}

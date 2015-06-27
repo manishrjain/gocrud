@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/crud/req"
-	"github.com/crud/x"
+	"github.com/gocrud/req"
+	"github.com/gocrud/x"
 )
 
 var log = x.Log("api")
@@ -53,12 +53,16 @@ func (n *Node) AddChild(kind string) *Node {
 }
 
 func (n *Node) Set(property string, value interface{}) *Node {
-	log.WithField(property, value).Debug("SetText")
+	log.WithField(property, value).Debug("Set")
 	if n.edges == nil {
 		n.edges = make(map[string]interface{})
 	}
 	n.edges[property] = value
 	return n
+}
+
+func (n *Node) MarkDeleted() *Node {
+	return n.Set("_delete_", true)
 }
 
 func (n *Node) recPrint(l int) {

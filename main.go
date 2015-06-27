@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/crud/api"
-	"github.com/crud/req"
-	"github.com/crud/store"
-	"github.com/crud/x"
+	"github.com/gocrud/api"
+	"github.com/gocrud/req"
+	"github.com/gocrud/store"
+	"github.com/gocrud/x"
 )
 
 var log = x.Log("main")

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/crud/x"
+	"github.com/gocrud/x"
 )
 
 type Sql struct {
