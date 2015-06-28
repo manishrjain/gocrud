@@ -25,13 +25,15 @@ This library supports both SQL and NoSQL databases including other datastores, n
 1. Cassandra
 1. LevelDB
 1. Any SQL stores (via http://golang.org/pkg/database/sql/)
+1. PostGreSQL (thanks philips)
 1. Google Datastore
+1. RethinkDB (thanks dancannon)
 1. _Any others as requested_
 
 In fact, it exposes a simple interface for operations requiring databases, so you can easily add your favorite database (or request for addition).
 ```go
 type Store interface {
-  Init(string)
+	Init(dbtype string, tablename string)
   Commit(tablePrefix string, its []*x.Instruction) error
   IsNew(tablePrefix string, subject string) bool
   GetEntity(tablePrefix string, subject string) ([]x.Instruction, error)
