@@ -1,0 +1,3 @@
+r.dbCreate('crudtest');
+r.db('crudtest').tableCreate('instructions');
+r.db('crudtest').table('instructions').indexCreate('SubjectId');

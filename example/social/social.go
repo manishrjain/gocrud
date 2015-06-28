@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	r "github.com/dancannon/gorethink"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
 	_ "github.com/lib/pq"
@@ -123,6 +124,20 @@ func main() {
 		sqldb := new(store.Sql)
 		sqldb.SetDb(db)
 		c.Store = sqldb
+		c.Store.Init(*storeType, "instructions")
+
+	} else if *storeType == "rethinkdb" {
+		session, err := r.Connect(r.ConnectOpts{
+			// Address:  "192.168.59.103:28015",
+			Address:  "localhost:28015",
+			Database: "crudtest",
+		})
+		if err != nil {
+			panic(err)
+		}
+		rethinkdb := new(store.RethinkDB)
+		rethinkdb.SetSession(session)
+		c.Store = rethinkdb
 		c.Store.Init(*storeType, "instructions")
 
 	} else if *storeType == "datastore" {
