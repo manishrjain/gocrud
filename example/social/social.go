@@ -8,6 +8,8 @@ import (
 	"math/rand"
 	"time"
 
+	"labix.org/v2/mgo"
+
 	r "github.com/dancannon/gorethink"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gocql/gocql"
@@ -138,6 +140,18 @@ func main() {
 		rethinkdb := new(store.RethinkDB)
 		rethinkdb.SetSession(session)
 		c.Store = rethinkdb
+		c.Store.Init(*storeType, "instructions")
+
+	} else if *storeType == "mongodb" {
+		// "192.168.59.103:27017"
+		session, err := mgo.Dial("localhost:27017")
+		if err != nil {
+			panic(err)
+		}
+		session.SetMode(mgo.Monotonic, true)
+		mongodb := new(store.MongoDB)
+		mongodb.SetSession(session, "crudtest")
+		c.Store = mongodb
 		c.Store.Init(*storeType, "instructions")
 
 	} else if *storeType == "datastore" {
