@@ -40,7 +40,7 @@ func main() {
 	l := new(store.Leveldb)
 	l.SetBloomFilter(13)
 	c.Store = l
-	c.Store.Init("/tmp/crud_example_server")
+	c.Store.Init("leveldb", "/tmp/crud_example_server")
 
 	help := new(helper.Helper)
 	help.SetContext(c)
