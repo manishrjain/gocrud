@@ -28,7 +28,10 @@ This library supports both SQL and NoSQL databases including other datastores, n
 1. PostGreSQL (thanks philips)
 1. Google Datastore
 1. RethinkDB (thanks dancannon)
+1. MongoDB (thanks wolfeidau)
 1. _Any others as requested_
+
+**Note**: To get all of these dependencies, run `go get github.com/manishrjain/gocrud/example/social`.
 
 In fact, it exposes a simple interface for operations requiring databases, so you can easily add your favorite database (or request for addition).
 ```go
