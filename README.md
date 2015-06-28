@@ -33,7 +33,7 @@ This library supports both SQL and NoSQL databases including other datastores, n
 In fact, it exposes a simple interface for operations requiring databases, so you can easily add your favorite database (or request for addition).
 ```go
 type Store interface {
-	Init(dbtype string, tablename string)
+  Init(dbtype string, tablename string)
   Commit(tablePrefix string, its []*x.Instruction) error
   IsNew(tablePrefix string, subject string) bool
   GetEntity(tablePrefix string, subject string) ([]x.Instruction, error)
