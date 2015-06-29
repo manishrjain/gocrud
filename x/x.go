@@ -8,11 +8,17 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
 
 var log = Log("x")
+
+// Create and seed the generator.
+// Typically a non-fixed seed should be used, such as time.Now().UnixNano().
+// Using a fixed seed will produce the same output on every run.
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 type Status struct {
 	Code    string `json:"code"`
@@ -137,7 +143,7 @@ const alphachars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 func UniqueString(alpha int) string {
 	var buf bytes.Buffer
 	for i := 0; i < alpha; i++ {
-		idx := rand.Intn(len(alphachars))
+		idx := r.Intn(len(alphachars))
 		buf.WriteByte(alphachars[idx])
 	}
 	return buf.String()
