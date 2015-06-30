@@ -1,3 +1,4 @@
+// api package provides the CRUD apis for data manipulation.
 package api
 
 import (
@@ -13,6 +14,8 @@ import (
 
 var log = x.Log("api")
 
+// Node stores the create and update instructions, acting as the modifier
+// to the entity Node relates to.
 type Node struct {
 	kind      string
 	id        string
@@ -23,6 +26,8 @@ type Node struct {
 	Timestamp int64
 }
 
+// Get is the main entrypoint to updates. Returns back a Node
+// object pointer, to run create and update operations on.
 func Get(kind, id string) *Node {
 	log.WithFields(logrus.Fields{
 		"func": "GetNode",
@@ -36,11 +41,20 @@ func Get(kind, id string) *Node {
 	return n
 }
 
+// SetSource sets the author of the update. Generally, the userid of the
+// modifier.
 func (n *Node) SetSource(source string) *Node {
 	n.source = source
 	return n
 }
 
+// AddChild creates a new entity with the given kind, and creates a
+// directed relationship from current entity to this new child entity.
+// This is useful to generate arbitrarily deep and complex data structures,
+// for e.g. Posts by Users, Comments on Posts, Likes on Posts etc.
+//
+// Retuns the Node pointer for the child entity, so any update operations
+// done on this pointer would be reflected in the child entity.
 func (n *Node) AddChild(kind string) *Node {
 	log.WithField("childkind", kind).Debug("AddChild")
 	child := new(Node)
@@ -52,6 +66,9 @@ func (n *Node) AddChild(kind string) *Node {
 	return child
 }
 
+// Set allows you to set the property and value on the current entity.
+// This would effectively replace any other value this property had,
+// on this entity node pointer represents.
 func (n *Node) Set(property string, value interface{}) *Node {
 	log.WithField(property, value).Debug("Set")
 	if n.edges == nil {
@@ -61,6 +78,9 @@ func (n *Node) Set(property string, value interface{}) *Node {
 	return n
 }
 
+// Marks the current entity for deletion. This is equivalent to doing a
+// Set("delete", true), and then running q.FilterOut("delete") during
+// query phase.
 func (n *Node) MarkDeleted() *Node {
 	return n.Set("_delete_", true)
 }
@@ -79,6 +99,8 @@ func (n *Node) root() *Node {
 	return n
 }
 
+// Print finds the root from the given Node pointer, and does a recursive
+// print on the tree for debugging purposes.
 func (n *Node) Print() *Node {
 	n = n.root()
 	n.recPrint(0)
@@ -162,6 +184,9 @@ func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	return nil
 }
 
+// Execute finds the root from the given Node pointer, recursively generates
+// the set of instructions to store, and commits them. Returns any errors
+// encountered during these steps.
 func (n *Node) Execute(c *req.Context) error {
 	n = n.root()
 

@@ -9,6 +9,8 @@ import (
 	"github.com/manishrjain/gocrud/x"
 )
 
+// Query stores the read instrutions, storing the instruction set
+// for the entities Query relates to.
 type Query struct {
 	kind      string
 	id        string
@@ -24,6 +26,8 @@ type Object struct {
 	NanoTs int64
 }
 
+// Result stores the final entity state retrieved from Store upon running
+// the instructions provided by Query.
 type Result struct {
 	Id       string
 	Kind     string
@@ -36,6 +40,8 @@ type runResult struct {
 	Err    error
 }
 
+// NewQuery is the main entrypoint to reads. Returns back a Query
+// object pointer, to run read instructions on.
 func NewQuery(kind, id string) *Query {
 	q := new(Query)
 	q.kind = kind
@@ -43,11 +49,22 @@ func NewQuery(kind, id string) *Query {
 	return q
 }
 
+// UptoDepth specifies the number of levels of descendants that would be
+// retrieved for the entity Query points to.
+//
+// You can think of this in terms of a tree structure, where the Entity pointed
+// to by Query points to other Entities, which in turn point to more Entities,
+// and so on. For e.g. Post -> Comments -> Likes.
 func (q *Query) UptoDepth(level int) *Query {
 	q.maxDepth = level
 	return q
 }
 
+// Collect specifies the kind of child entities to retrieve. Returns back
+// a new Query pointer pointing to those children entities as a collective.
+//
+// Any further operations on this returned pointer would attribute to those
+// children entities, and not the caller query entity.
 func (q *Query) Collect(kind string) *Query {
 	for _, child := range q.children {
 		if child.kind == kind {
@@ -61,6 +78,8 @@ func (q *Query) Collect(kind string) *Query {
 	return child
 }
 
+// FilterOut provides a way to well, filter out, any entities which have
+// the given property.
 func (q *Query) FilterOut(property string) *Query {
 	if len(q.filterOut) == 0 {
 		q.filterOut = make(map[string]bool)
@@ -179,6 +198,9 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 	return
 }
 
+// Run finds the root from the given Query pointer, recursively executes
+// the read operations, and returns back pointer to Result object.
+// Any errors encountered during these stpeps is returned as well.
 func (q *Query) Run(c *req.Context) (result *Result, rerr error) {
 	q = q.root()
 
@@ -227,11 +249,23 @@ func (r *Result) toJson() (data map[string]interface{}) {
 	return
 }
 
+// ToJson creates the JSON for the data pointed by the Result pointer.
+//
+// Note that this doesn't find the "root" from the Result pointer, instead
+// doing the processing only from the current Result pointer.
 func (r *Result) ToJson() ([]byte, error) {
 	data := r.toJson()
 	return json.Marshal(data)
 }
 
+// WriteJsonResponse does the same as ToJson. But also writes the JSON
+// generated to http.ResponseWriter. In case of error, writes that error
+// instead, in this format:
+//
+//  {
+//   "code":    "E_ERROR",
+//   "message": "error message"
+//  }
 func (r *Result) WriteJsonResponse(w http.ResponseWriter) {
 	data, err := r.ToJson()
 	if err != nil {
