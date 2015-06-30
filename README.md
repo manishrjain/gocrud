@@ -1,10 +1,16 @@
 # gocrud
 Go library to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
-[Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
+ * [Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
+ * [Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
 
-[Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
+## Build and Run
+```bash
+go build github.com/manishrjain/gocrud
+./gocrud  # By default, uses leveldb as a datastore.
+```
 
+## Library
 This library is built to allow these properties for the data:
 
 1. **Versioning**: Keep track of all edits to the data, including deletion operations.
@@ -22,6 +28,7 @@ And be able to traverse these relationships and retrieve all of the children, gr
 
 The library does this by utilizing Graph operations, but without using a Graph database. This means the library can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice.
 
+## Datastore support
 This library supports both SQL and NoSQL databases including other datastores, namely
 
 1. Cassandra
@@ -33,7 +40,7 @@ This library supports both SQL and NoSQL databases including other datastores, n
 1. MongoDB (thanks wolfeidau)
 1. _Any others as requested_
 
-**Note**: To get all of these dependencies, run `go get github.com/manishrjain/gocrud/example/social`.
+**Note**: To get all of these dependencies, run `go get github.com/manishrjain/gocrud`.
 
 In fact, it exposes a simple interface for operations requiring databases, so you can easily add your favorite database (or request for addition).
 ```go

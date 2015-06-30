@@ -1,3 +1,5 @@
+// Package main to demonstrate usage of the gocrud apis,
+// using a social network as an example.
 package main
 
 import (
