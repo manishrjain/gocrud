@@ -1,3 +1,4 @@
+// Package x stores utility functions, mostly for internal usage.
 package x
 
 import (
@@ -20,11 +21,15 @@ var log = Log("x")
 // Using a fixed seed will produce the same output on every run.
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
+// Status stores any error codes retuned along with the error message; and
+// is converted to JSON and returned if there's any error during the
+// result.WriteJsonResponse call.
 type Status struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
+// Instruction is the format data gets stored in the underlying data stores.
 type Instruction struct {
 	SubjectId   string `json:"subject_id,omitempty"`
 	SubjectType string `json:"subject_type,omitempty"`
@@ -35,6 +40,7 @@ type Instruction struct {
 	Source      string `json:"source,omitempty"`
 }
 
+// GobEncode converts Instruction to a byte array.
 func (i *Instruction) GobEncode() ([]byte, error) {
 	w := new(bytes.Buffer)
 	enc := gob.NewEncoder(w)
@@ -62,6 +68,7 @@ func (i *Instruction) GobEncode() ([]byte, error) {
 	return w.Bytes(), nil
 }
 
+// GobDecode decodes Instruction from a byte array.
 func (i *Instruction) GobDecode(buf []byte) error {
 	r := bytes.NewBuffer(buf)
 	dec := gob.NewDecoder(r)
@@ -89,12 +96,14 @@ func (i *Instruction) GobDecode(buf []byte) error {
 	return nil
 }
 
+// Its is used for providing a sort interface to []Instruction.
 type Its []Instruction
 
 func (its Its) Len() int           { return len(its) }
 func (its Its) Swap(i, j int)      { its[i], its[j] = its[j], its[i] }
 func (its Its) Less(i, j int) bool { return its[i].NanoTs < its[j].NanoTs }
 
+// Error constants.
 const (
 	E_ERROR            = "E_ERROR"
 	E_INVALID_METHOD   = "E_INVALID_METHOD"
@@ -105,6 +114,7 @@ const (
 	E_UNAUTHORIZED     = "E_UNAUTHORIZED"
 )
 
+// Log returns a logrus.Entry with a package field set.
 func Log(p string) *logrus.Entry {
 	logrus.SetLevel(logrus.DebugLevel)
 	l := logrus.WithFields(logrus.Fields{
@@ -113,12 +123,15 @@ func Log(p string) *logrus.Entry {
 	return l
 }
 
+// LogErr returns a logrus.Entry with an error field set.
 func LogErr(entry *logrus.Entry, err error) *logrus.Entry {
 	return entry.WithFields(logrus.Fields{
 		"error": err.Error(),
 	})
 }
 
+// SetStatus creates, converts to JSON, and writes a Status object
+// to http.ResponseWriter.
 func SetStatus(w http.ResponseWriter, code, msg string) {
 	r := &Status{Code: code, Message: msg}
 	if js, err := json.Marshal(r); err == nil {
@@ -128,6 +141,8 @@ func SetStatus(w http.ResponseWriter, code, msg string) {
 	}
 }
 
+// ParseRequest parses a JSON based POST or PUT request into the provided
+// Golang interface.
 func ParseRequest(w http.ResponseWriter, r *http.Request, data interface{}) bool {
 	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
@@ -140,6 +155,8 @@ func ParseRequest(w http.ResponseWriter, r *http.Request, data interface{}) bool
 
 const alphachars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+// UniqueString generates a unique string only using the characters from
+// alphachars constant, with length as specified.
 func UniqueString(alpha int) string {
 	var buf bytes.Buffer
 	for i := 0; i < alpha; i++ {
@@ -149,6 +166,9 @@ func UniqueString(alpha int) string {
 	return buf.String()
 }
 
+// ParseIdFromUrl parses id from url (if it's a suffix) in this format:
+//  url = host/xyz/id, urlToken = /xyz/ => uid = id
+//  url = host/a/b/id, urlToken = /b/   => uid = id
 func ParseIdFromUrl(r *http.Request, urlToken string) (uid string, ok bool) {
 	url := r.URL.Path
 	idx := strings.LastIndex(url, urlToken)
@@ -158,11 +178,14 @@ func ParseIdFromUrl(r *http.Request, urlToken string) (uid string, ok bool) {
 	return url[idx+len(urlToken):], true
 }
 
+// Reply would JSON marshal the provided rep Go interface object, and
+// write that to http.ResponseWriter. In case of error, call SetStatus
+// with the error.
 func Reply(w http.ResponseWriter, rep interface{}) {
 	if js, err := json.Marshal(rep); err == nil {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(js))
 	} else {
-		SetStatus(w, E_ERROR, "Internal server error")
+		SetStatus(w, E_ERROR, err.Error())
 	}
 }
