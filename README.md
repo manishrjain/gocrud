@@ -2,6 +2,7 @@
 Go library to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
 [Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
+
 [Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
 
 This library is built to allow these properties for the data:
