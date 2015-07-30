@@ -157,7 +157,7 @@ func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		}
 
 		for idx := 0; ; idx++ {
-			child.id = x.UniqueString(5)
+			child.id = x.UniqueString(c.NumCharsUnique)
 			log.WithField("id", child.id).Debug("Checking availability of new id")
 			if isnew := c.Store.IsNew(c.TablePrefix, child.id); isnew {
 				log.WithField("id", child.id).Debug("New id available")
@@ -188,6 +188,11 @@ func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 // the set of instructions to store, and commits them. Returns any errors
 // encountered during these steps.
 func (n *Node) Execute(c *req.Context) error {
+	if c.NumCharsUnique <= 0 {
+		log.Fatal("Invalid number of chars for generating unique ids. Set req.Context.NumCharsUnique")
+		return errors.New("Invalid req.Context.NumCharsUnique")
+	}
+
 	n = n.root()
 
 	var its []*x.Instruction

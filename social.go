@@ -81,6 +81,7 @@ func main() {
 	flag.Parse()
 
 	c = new(req.Context)
+	c.NumCharsUnique = 10 // 62^10 permutations
 
 	if *storeType == "leveldb" {
 		l := new(store.Leveldb)
