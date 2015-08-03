@@ -1,20 +1,8 @@
 package search
 
-import "github.com/gocrud/x"
+import "github.com/manishrjain/gocrud/x"
 
 var log = x.Log("search")
-
-type Entity struct {
-	Kind string
-	Id   string
-}
-
-type Doc struct {
-	Kind   string
-	Id     string
-	Values map[string]interface{}
-	NanoTs int64
-}
 
 // All the search operations are run via this Search interface.
 // Implement this interface to add support for a search engine.
@@ -25,15 +13,24 @@ type Updater interface {
 	// on either itself, or it's direct children. Note that each
 	// child entity would also be called with OnUpdate. This function
 	// should return the Entity Ids, which need regeneration.
-	OnUpdate(kind, id string) []Entity
+	OnUpdate(kind, id string) []x.Entity
 
 	// Regenerate would be called on entities which need to be reprocessed
 	// due to a change. The workflow is:
 	// store.Commit -> search.OnUpdate -> Regenerate
-	Regenerate(kind, id string) Doc
+	Regenerate(kind, id string) x.Doc
 }
 
-type Search struct {
+type SearchQuery interface {
+	Where(field, value interface{}) *SearchQuery
+	Limit(num int) *SearchQuery
+	Order(field string) *SearchQuery
+}
+
+type Engine interface {
+	Init()
+	NewQuery(kind string) *SearchQuery
+	Run(query *SearchQuery) ([]x.Doc, error)
 }
 
 func NewSearch(kind string) *Search { return nil }
@@ -42,6 +39,3 @@ func NewSearch(kind string) *Search { return nil }
 // Where("field =", "something") or
 // Where("field >", "something") or
 // Where("field <", "something")
-func (s *Search) Where(field, value interface{}) {}
-func (s *Search) Limit(num int)                  {}
-func (s *Search) Order(field string)             {}

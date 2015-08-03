@@ -29,6 +29,19 @@ type Status struct {
 	Message string `json:"message"`
 }
 
+type Entity struct {
+	Kind string
+	Id   string
+}
+
+// Doc is the format data gets stored in search engine.
+type Doc struct {
+	Kind   string
+	Id     string
+	Values map[string]interface{}
+	NanoTs int64
+}
+
 // Instruction is the format data gets stored in the underlying data stores.
 type Instruction struct {
 	SubjectId   string `json:"subject_id,omitempty"`
