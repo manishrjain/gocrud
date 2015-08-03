@@ -18,7 +18,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/manishrjain/gocrud/api"
 	"github.com/manishrjain/gocrud/req"
-	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -169,13 +168,32 @@ func main() {
 
 	log.Debug("Store initialized. Checking search...")
 
-	engine := new(search.Elastic)
-	c.Engine = engine
-	c.Engine.Init("http://192.168.59.103:9200")
-	return
+	/*
+		engine := new(search.Elastic)
+		c.Engine = engine
+		c.Engine.Init("http://192.168.59.103:9200")
+		m := make(map[string]interface{})
+		r := rand.Intn(100)
+		uid := fmt.Sprintf("uid_%d", r)
+		m["author"] = fmt.Sprintf("mrjn-%d", r)
+		m["ts"] = r
+		doc := x.Doc{Kind: "test", Id: uid, NanoTs: time.Now().UnixNano(), Values: m}
+		if err := c.Engine.Update(doc); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return
+		}
 
-	var err error
+		docs, err := c.Engine.NewQuery("test").Order("ts").Limit(3).Run()
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+		} else {
+			fmt.Printf("Docs: %+v\n", docs)
+		}
+		return
+	*/
+
 	uid := newUser()
+	var err error
 
 	// Let's get started. User 'uid' creates a new Post.
 	// This Post shares a url, adds some text and some tags.

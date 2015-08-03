@@ -1,6 +1,9 @@
 package search
 
 import (
+	"errors"
+	"reflect"
+
 	"github.com/manishrjain/gocrud/x"
 	"gopkg.in/olivere/elastic.v2"
 )
@@ -49,13 +52,59 @@ func (es *Elastic) Init(url string) {
 }
 
 func (es *Elastic) Update(doc x.Doc) error {
+	if doc.Id == "" || doc.Kind == "" || doc.NanoTs == 0 {
+		return errors.New("Invalid document")
+	}
+
+	result, err := es.client.Index().Index("gocrud").Type(doc.Kind).Id(doc.Id).
+		VersionType("external").Version(doc.NanoTs).BodyJson(doc).Do()
+	if err != nil {
+		x.LogErr(log, err).WithField("doc", doc).Error("While indexing doc")
+		return err
+	}
+	log.Debug("index_result", result)
 	return nil
 }
 
-func (es *Elastic) NewQuery(kind string) *SearchQuery {
-	return nil
+type ElasticQuery struct {
+	ss *elastic.SearchService
 }
 
-func (es *Elastic) Run(query *SearchQuery) (docs []x.Doc, rerr error) {
-	return
+func (eq *ElasticQuery) Order(field string) SearchQuery {
+	if field[:1] == "-" {
+		eq.ss = eq.ss.Sort(field[1:], false)
+	} else {
+		eq.ss = eq.ss.Sort(field, true)
+	}
+	return eq
+}
+
+func (eq *ElasticQuery) Limit(num int) SearchQuery {
+	eq.ss = eq.ss.Size(num)
+	return eq
+}
+
+func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
+	result, err := eq.ss.Do()
+	if err != nil {
+		x.LogErr(log, err).Error("While running query")
+		return docs, err
+	}
+	if result.Hits == nil {
+		log.Debug("No results found")
+		return docs, nil
+	}
+
+	var d x.Doc
+	for _, item := range result.Each(reflect.TypeOf(d)) {
+		d := item.(x.Doc)
+		docs = append(docs, d)
+	}
+	return docs, nil
+}
+
+func (es *Elastic) NewQuery(kind string) SearchQuery {
+	eq := new(ElasticQuery)
+	eq.ss = es.client.Search("gocrud")
+	return eq
 }

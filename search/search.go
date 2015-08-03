@@ -22,16 +22,16 @@ type Updater interface {
 }
 
 type SearchQuery interface {
-	Where(field, value interface{}) *SearchQuery
-	Limit(num int) *SearchQuery
-	Order(field string) *SearchQuery
+	// Where(field, value interface{}) *SearchQuery
+	Limit(num int) SearchQuery
+	Order(field string) SearchQuery
+	Run() ([]x.Doc, error)
 }
 
 type Engine interface {
 	Init(string)
 	Update(x.Doc) error
-	NewQuery(kind string) *SearchQuery
-	Run(query *SearchQuery) ([]x.Doc, error)
+	NewQuery(kind string) SearchQuery
 }
 
 // Search docs where:
