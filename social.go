@@ -18,6 +18,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/manishrjain/gocrud/api"
 	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -165,6 +166,13 @@ func main() {
 	} else {
 		panic("Invalid store")
 	}
+
+	log.Debug("Store initialized. Checking search...")
+
+	engine := new(search.Elastic)
+	c.Engine = engine
+	c.Engine.Init("http://192.168.59.103:9200")
+	return
 
 	var err error
 	uid := newUser()

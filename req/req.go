@@ -5,10 +5,14 @@
 // to assign to new entities, and setting the storage system.
 package req
 
-import "github.com/manishrjain/gocrud/store"
+import (
+	"github.com/manishrjain/gocrud/search"
+	"github.com/manishrjain/gocrud/store"
+)
 
 type Context struct {
 	TablePrefix    string
 	NumCharsUnique int // 62^num unique strings
 	Store          store.Store
+	Engine         search.Engine
 }

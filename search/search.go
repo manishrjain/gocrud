@@ -28,12 +28,11 @@ type SearchQuery interface {
 }
 
 type Engine interface {
-	Init()
+	Init(string)
+	Update(x.Doc) error
 	NewQuery(kind string) *SearchQuery
 	Run(query *SearchQuery) ([]x.Doc, error)
 }
-
-func NewSearch(kind string) *Search { return nil }
 
 // Search docs where:
 // Where("field =", "something") or
