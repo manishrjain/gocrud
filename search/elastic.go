@@ -14,6 +14,11 @@ type Elastic struct {
 	client *elastic.Client
 }
 
+// ElasticQuery implements methods declared by search.Query.
+type ElasticQuery struct {
+	ss *elastic.SearchService
+}
+
 // Init initializes connection to Elastic Search instance, checks for
 // existence of "gocrud" index and creates it, if missing. Note that
 // Init does NOT do mapping necessary to do exact-value term matching
@@ -57,6 +62,8 @@ func (es *Elastic) Init(url string) {
 	log.Debug("Connected with ElasticSearch")
 }
 
+// Update checks the validify of given document, and the.
+// external versioning via the timestamp of the document.
 func (es *Elastic) Update(doc x.Doc) error {
 	if doc.Id == "" || doc.Kind == "" || doc.NanoTs == 0 {
 		return errors.New("Invalid document")
@@ -72,10 +79,6 @@ func (es *Elastic) Update(doc x.Doc) error {
 	return nil
 }
 
-type ElasticQuery struct {
-	ss *elastic.SearchService
-}
-
 // MatchExact implemented by ElasticSearch uses the 'term' directive.
 // Note that with strings, this might not return exact match results,
 // if the index is set to pre-process strings, which it does by default.
@@ -89,6 +92,7 @@ func (eq *ElasticQuery) MatchExact(field string,
 	return eq
 }
 
+// Order sorts the results for the given field.
 func (eq *ElasticQuery) Order(field string) Query {
 	if field[:1] == "-" {
 		eq.ss = eq.ss.Sort(field[1:], false)
@@ -98,11 +102,13 @@ func (eq *ElasticQuery) Order(field string) Query {
 	return eq
 }
 
+// Limit limits the number of results to num.
 func (eq *ElasticQuery) Limit(num int) Query {
 	eq.ss = eq.ss.Size(num)
 	return eq
 }
 
+// Run runs the query and returns results and error, if any.
 func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 	result, err := eq.ss.Do()
 	if err != nil {
@@ -122,6 +128,7 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 	return docs, nil
 }
 
+// NewQuery creates a new query object, to return results of type kind.
 func (es *Elastic) NewQuery(kind string) Query {
 	eq := new(ElasticQuery)
 	eq.ss = es.client.Search("gocrud").Type(kind)
