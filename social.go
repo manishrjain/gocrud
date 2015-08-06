@@ -168,30 +168,6 @@ func main() {
 
 	log.Debug("Store initialized. Checking search...")
 
-	/*
-		engine := new(search.Elastic)
-		c.Engine = engine
-		c.Engine.Init("http://192.168.59.103:9200")
-		m := make(map[string]interface{})
-		r := rand.Intn(100)
-		uid := fmt.Sprintf("uid_%d", r)
-		m["author"] = fmt.Sprintf("mrjn-%d", r)
-		m["ts"] = r
-		doc := x.Doc{Kind: "test", Id: uid, NanoTs: time.Now().UnixNano(), Values: m}
-		if err := c.Engine.Update(doc); err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return
-		}
-
-		docs, err := c.Engine.NewQuery("test").Order("ts").Limit(3).Run()
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-		} else {
-			fmt.Printf("Docs: %+v\n", docs)
-		}
-		return
-	*/
-
 	uid := newUser()
 	var err error
 
