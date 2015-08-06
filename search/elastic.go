@@ -8,10 +8,16 @@ import (
 	"gopkg.in/olivere/elastic.v2"
 )
 
+// Elastic encapsulates elastic search client, and implements methods declared
+// by search.Engine.
 type Elastic struct {
 	client *elastic.Client
 }
 
+// Init initializes connection to Elastic Search instance, checks for
+// existence of "gocrud" index and creates it, if missing. Note that
+// Init does NOT do mapping necessary to do exact-value term matching
+// for strings etc. That needs to be done externally.
 func (es *Elastic) Init(url string) {
 	log.Debug("Initializing connection to ElaticSearch")
 	var opts []elastic.ClientOptionFunc
@@ -77,13 +83,13 @@ type ElasticQuery struct {
 // set the mapping to "index": "not_analyzed".
 // https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
 func (eq *ElasticQuery) MatchExact(field string,
-	value interface{}) SearchQuery {
+	value interface{}) Query {
 	tq := elastic.NewTermQuery(field, value)
 	eq.ss = eq.ss.Query(&tq)
 	return eq
 }
 
-func (eq *ElasticQuery) Order(field string) SearchQuery {
+func (eq *ElasticQuery) Order(field string) Query {
 	if field[:1] == "-" {
 		eq.ss = eq.ss.Sort(field[1:], false)
 	} else {
@@ -92,7 +98,7 @@ func (eq *ElasticQuery) Order(field string) SearchQuery {
 	return eq
 }
 
-func (eq *ElasticQuery) Limit(num int) SearchQuery {
+func (eq *ElasticQuery) Limit(num int) Query {
 	eq.ss = eq.ss.Size(num)
 	return eq
 }
@@ -116,7 +122,7 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 	return docs, nil
 }
 
-func (es *Elastic) NewQuery(kind string) SearchQuery {
+func (es *Elastic) NewQuery(kind string) Query {
 	eq := new(ElasticQuery)
 	eq.ss = es.client.Search("gocrud").Type(kind)
 	return eq
