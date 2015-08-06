@@ -52,6 +52,21 @@ type User struct {
 	Post []Post `json:"Post,omitempty"`
 }
 
+type SimpleIndexer struct {
+}
+
+func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
+	result = append(result, e)
+	return
+}
+
+func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
+	rdoc.Id = e.Id
+	rdoc.Kind = e.Kind
+	rdoc.NanoTs = int64(rand.Intn(1000))
+	return
+}
+
 func newUser() string {
 	return "uid_" + x.UniqueString(3)
 }
@@ -165,6 +180,10 @@ func main() {
 	} else {
 		panic("Invalid store")
 	}
+
+	c.Indexer = SimpleIndexer{}
+	c.RunIndexer()
+	defer c.WaitForIndexer()
 
 	log.Debug("Store initialized. Checking search...")
 

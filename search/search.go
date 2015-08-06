@@ -16,22 +16,22 @@ var log = x.Log("search")
 // Note that the term Entity is being used interchangeably with
 // the term Subject. An Entity has a kind, and has an id.
 
-// Updater functions are called automatically by store operations.
+// Indexer functions are called automatically by store operations.
 // These functions are used to determine which entities need updating,
 // and then re-generate their corresponding documents, which then get
 // re-indexed into search engine, overwriting past
 // (using versioning, if available) documents.
-type Updater interface {
+type Indexer interface {
 	// OnUpdate is called when an entity is updated due to a Commit
 	// on either itself, or it's direct children. Note that each
 	// child entity would also be called with OnUpdate. This function
 	// should return the Entity Ids, which need regeneration.
-	OnUpdate(kind, id string) []x.Entity
+	OnUpdate(x.Entity) []x.Entity
 
 	// Regenerate would be called on entities which need to be reprocessed
 	// due to a change. The workflow is:
 	// store.Commit -> search.OnUpdate -> Regenerate
-	Regenerate(kind, id string) x.Doc
+	Regenerate(x.Entity) x.Doc
 }
 
 // Query interface provides the search api encapsulator, responsible for

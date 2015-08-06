@@ -6,13 +6,59 @@
 package req
 
 import (
+	"sync"
+
 	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
+	"github.com/manishrjain/gocrud/x"
 )
+
+var log = x.Log("req")
 
 type Context struct {
 	TablePrefix    string
 	NumCharsUnique int // 62^num unique strings
 	Store          store.Store
 	Engine         search.Engine
+	Indexer        search.Indexer
+	updates        chan x.Entity
+	wg             *sync.WaitGroup
+}
+
+func (c *Context) processChannel() {
+	defer c.wg.Done()
+	for entity := range c.updates {
+		doc := c.Indexer.Regenerate(entity)
+		log.WithField("doc", doc).Debug("Regenerated doc")
+		if c.Engine == nil {
+			continue
+		}
+		err := c.Engine.Update(doc)
+		if err != nil {
+			x.LogErr(log, err).WithField("doc", doc).Error("While updating doc")
+		}
+	}
+	log.Info("Finished processing")
+}
+
+func (c *Context) RunIndexer() {
+	// Block if we have more than 1000 pending entities for update.
+	c.updates = make(chan x.Entity, 1000)
+
+	c.wg = new(sync.WaitGroup)
+	// Use 2 goroutines.
+	for i := 0; i < 2; i++ {
+		c.wg.Add(1)
+		go c.processChannel()
+	}
+}
+
+func (c *Context) AddToQueue(e x.Entity) {
+	c.updates <- e
+}
+
+func (c *Context) WaitForIndexer() {
+	log.Debug("Waiting for indexer to finish.")
+	close(c.updates)
+	c.wg.Wait()
 }

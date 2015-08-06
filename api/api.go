@@ -204,5 +204,34 @@ func (n *Node) Execute(c *req.Context) error {
 		return errors.New("No instructions generated")
 	}
 
-	return c.Store.Commit(c.TablePrefix, its)
+	if rerr := c.Store.Commit(c.TablePrefix, its); rerr != nil {
+		return rerr
+	}
+
+	{
+		// This block of code figures out which entities have been modified, runs
+		// OnUpdate calls on them, to then compile a list of unique entities which
+		// need to be regenerated, and sends them off to the c.Updates channel.
+		updates := make(map[x.Entity]bool)
+		regens := make(map[x.Entity]bool)
+		for _, it := range its {
+			e := x.Entity{Kind: it.SubjectType, Id: it.SubjectId}
+			updates[e] = true
+		}
+		for entity := range updates {
+			dirty := c.Indexer.OnUpdate(entity)
+			for _, de := range dirty {
+				regens[de] = true
+			}
+		}
+
+		log.WithField("num_updates", len(updates)).
+			WithField("num_regenerate", len(regens)).Debug("Sending for doc regeneration")
+		for entity := range regens {
+			log.WithField("kind", entity.Kind).WithField("id", entity.Id).
+				Debug("Send to updates channel")
+			c.AddToQueue(entity)
+		}
+	}
+	return nil
 }
