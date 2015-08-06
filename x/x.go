@@ -39,7 +39,7 @@ type Doc struct {
 	Kind   string
 	Id     string
 	NanoTs int64
-	Values map[string]interface{}
+	Data   interface{}
 }
 
 // Instruction is the format data gets stored in the underlying data stores.

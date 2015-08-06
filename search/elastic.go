@@ -70,6 +70,19 @@ type ElasticQuery struct {
 	ss *elastic.SearchService
 }
 
+// MatchExact implemented by ElasticSearch uses the 'term' directive.
+// Note that with strings, this might not return exact match results,
+// if the index is set to pre-process strings, which it does by default.
+// In other words, for string term-exact matches to work, you need to
+// set the mapping to "index": "not_analyzed".
+// https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
+func (eq *ElasticQuery) MatchExact(field string,
+	value interface{}) SearchQuery {
+	tq := elastic.NewTermQuery(field, value)
+	eq.ss = eq.ss.Query(&tq)
+	return eq
+}
+
 func (eq *ElasticQuery) Order(field string) SearchQuery {
 	if field[:1] == "-" {
 		eq.ss = eq.ss.Sort(field[1:], false)
@@ -105,6 +118,6 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 
 func (es *Elastic) NewQuery(kind string) SearchQuery {
 	eq := new(ElasticQuery)
-	eq.ss = es.client.Search("gocrud")
+	eq.ss = es.client.Search("gocrud").Type(kind)
 	return eq
 }
