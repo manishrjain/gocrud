@@ -18,8 +18,16 @@ type Datastore struct {
 	projectId   string
 }
 
-func (ds *Datastore) Init(tablePrefix string, project string) {
-	ds.tablePrefix = tablePrefix
+// Init takes 2 arguments: tablePrefix and projectId.
+func (ds *Datastore) Init(args ...string) {
+	if len(args) != 2 {
+		log.WithField("args", args).Fatal("Invalid arguments")
+		return
+	}
+
+	ds.tablePrefix = args[0]
+	project := args[1]
+
 	client, err := google.DefaultClient(oauth2.NoContext,
 		"https://www.googleapis.com/auth/devstorage.full_control")
 	if err != nil {

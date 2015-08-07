@@ -25,7 +25,13 @@ func (l *Leveldb) SetBloomFilter(bits int) {
 	}
 }
 
-func (l *Leveldb) Init(_ string, filepath string) {
+func (l *Leveldb) Init(args ...string) {
+	if len(args) != 1 {
+		log.WithField("args", args).Fatal("Invalid arguments")
+		return
+	}
+	filepath := args[0]
+
 	var err error
 	l.db, err = leveldb.OpenFile(filepath, l.opt)
 	if err != nil {

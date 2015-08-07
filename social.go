@@ -16,8 +16,9 @@ import (
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 
-	_ "github.com/manishrjain/gocrud/drivers/leveldb"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
+	_ "github.com/manishrjain/gocrud/drivers/leveldb"
+	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
 )
 
 var storeType = flag.String("store", "leveldb",
@@ -182,6 +183,7 @@ func main() {
 	*/
 
 	store.Get().Init("leveldb", "/tmp/ldb_"+x.UniqueString(10))
+	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
 
 	c.Indexer = SimpleIndexer{}
 	c.RunIndexer(2)

@@ -11,9 +11,8 @@ var log = x.Log("store")
 // All the data CRUD operations are run via this Store interface.
 // Implement this interface to add support for a datastore.
 type Store interface {
-	// Init could be used to initialize anything which needs database type
-	// or tablename. This should be called exactly once.
-	Init(dbtype string, tablename string)
+	// Init is used to initialize store driver.
+	Init(args ...string)
 
 	// Commit writes the array of instructions to the data store.
 	Commit(its []*x.Instruction) error
