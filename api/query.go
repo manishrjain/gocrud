@@ -40,7 +40,7 @@ type runResult struct {
 	Err    error
 }
 
-// NewQuery is the main entrypoint to reads. Returns back a Query
+// NewQuery is the main entrypoint to data store queries. Returns back a Query
 // object pointer, to run read instructions on.
 func NewQuery(kind, id string) *Query {
 	q := new(Query)

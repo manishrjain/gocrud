@@ -41,13 +41,19 @@ func (c *Context) processChannel() {
 	log.Info("Finished processing")
 }
 
-func (c *Context) RunIndexer() {
+func (c *Context) RunIndexer(numRoutines int) {
+	if numRoutines <= 0 {
+		log.WithField("num_routines", numRoutines).
+			Fatal("Invalid number of goroutines for Indexer.")
+		return
+	}
+
 	// Block if we have more than 1000 pending entities for update.
 	c.updates = make(chan x.Entity, 1000)
 
 	c.wg = new(sync.WaitGroup)
 	// Use 2 goroutines.
-	for i := 0; i < 2; i++ {
+	for i := 0; i < numRoutines; i++ {
 		c.wg.Add(1)
 		go c.processChannel()
 	}

@@ -14,27 +14,27 @@ import (
 
 var log = x.Log("api")
 
-// Node stores the create and update instructions, acting as the modifier
-// to the entity Node relates to.
-type Node struct {
+// Update stores the create and update instructions, acting as the modifier
+// to the entity Update relates to.
+type Update struct {
 	kind      string
 	id        string
 	source    string
-	children  []*Node
-	parent    *Node
+	children  []*Update
+	parent    *Update
 	edges     map[string]interface{}
 	Timestamp int64
 }
 
-// Get is the main entrypoint to updates. Returns back a Node
+// NewUpdate is the main entrypoint to updates. Returns back a Update
 // object pointer, to run create and update operations on.
-func Get(kind, id string) *Node {
+func NewUpdate(kind, id string) *Update {
 	log.WithFields(logrus.Fields{
-		"func": "GetNode",
+		"func": "NewUpdate",
 		"kind": kind,
 		"id":   id,
-	}).Debug("Called Get")
-	n := new(Node)
+	}).Debug("Called")
+	n := new(Update)
 	n.kind = kind
 	n.id = id
 	n.Timestamp = time.Now().UnixNano()
@@ -43,7 +43,7 @@ func Get(kind, id string) *Node {
 
 // SetSource sets the author of the update. Generally, the userid of the
 // modifier.
-func (n *Node) SetSource(source string) *Node {
+func (n *Update) SetSource(source string) *Update {
 	n.source = source
 	return n
 }
@@ -53,11 +53,11 @@ func (n *Node) SetSource(source string) *Node {
 // This is useful to generate arbitrarily deep and complex data structures,
 // for e.g. Posts by Users, Comments on Posts, Likes on Posts etc.
 //
-// Retuns the Node pointer for the child entity, so any update operations
+// Retuns the Update pointer for the child entity, so any update operations
 // done on this pointer would be reflected in the child entity.
-func (n *Node) AddChild(kind string) *Node {
+func (n *Update) AddChild(kind string) *Update {
 	log.WithField("childkind", kind).Debug("AddChild")
-	child := new(Node)
+	child := new(Update)
 	child.parent = n
 	child.kind = kind
 	child.Timestamp = n.Timestamp
@@ -69,7 +69,7 @@ func (n *Node) AddChild(kind string) *Node {
 // Set allows you to set the property and value on the current entity.
 // This would effectively replace any other value this property had,
 // on this entity node pointer represents.
-func (n *Node) Set(property string, value interface{}) *Node {
+func (n *Update) Set(property string, value interface{}) *Update {
 	log.WithField(property, value).Debug("Set")
 	if n.edges == nil {
 		n.edges = make(map[string]interface{})
@@ -81,33 +81,33 @@ func (n *Node) Set(property string, value interface{}) *Node {
 // Marks the current entity for deletion. This is equivalent to doing a
 // Set("delete", true), and then running q.FilterOut("delete") during
 // query phase.
-func (n *Node) MarkDeleted() *Node {
+func (n *Update) MarkDeleted() *Update {
 	return n.Set("_delete_", true)
 }
 
-func (n *Node) recPrint(l int) {
-	log.Printf("Node[%d]: %+v", l, n)
+func (n *Update) recPrint(l int) {
+	log.Printf("Update[%d]: %+v", l, n)
 	for _, child := range n.children {
 		child.recPrint(l + 1)
 	}
 }
 
-func (n *Node) root() *Node {
+func (n *Update) root() *Update {
 	for n.parent != nil {
 		n = n.parent
 	}
 	return n
 }
 
-// Print finds the root from the given Node pointer, and does a recursive
+// Print finds the root from the given Update pointer, and does a recursive
 // print on the tree for debugging purposes.
-func (n *Node) Print() *Node {
+func (n *Update) Print() *Update {
 	n = n.root()
 	n.recPrint(0)
 	return n
 }
 
-func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
+func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	for pred, val := range n.edges {
 		if len(n.source) == 0 {
 			return errors.New(fmt.Sprintf(
@@ -184,10 +184,10 @@ func (n *Node) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	return nil
 }
 
-// Execute finds the root from the given Node pointer, recursively generates
+// Execute finds the root from the given Update pointer, recursively generates
 // the set of instructions to store, and commits them. Returns any errors
 // encountered during these steps.
-func (n *Node) Execute(c *req.Context) error {
+func (n *Update) Execute(c *req.Context) error {
 	if c.NumCharsUnique <= 0 {
 		log.Fatal("Invalid number of chars for generating unique ids. Set req.Context.NumCharsUnique")
 		return errors.New("Invalid req.Context.NumCharsUnique")
