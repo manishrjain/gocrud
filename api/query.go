@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
 
@@ -97,7 +98,7 @@ func (q *Query) root() *Query {
 
 func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 	log.Debugf("Query: %+v", q)
-	its, err := c.Store.GetEntity(c.TablePrefix, q.id)
+	its, err := store.Get().GetEntity(q.id)
 	if err != nil {
 		x.LogErr(log, err).Error("While retrieving: ", q.id)
 		ch <- runResult{Result: nil, Err: err}

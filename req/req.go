@@ -9,16 +9,13 @@ import (
 	"sync"
 
 	"github.com/manishrjain/gocrud/search"
-	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
 
 var log = x.Log("req")
 
 type Context struct {
-	TablePrefix    string
 	NumCharsUnique int // 62^num unique strings
-	Store          store.Store
 	Engine         search.Engine
 	Indexer        search.Indexer
 	updates        chan x.Entity

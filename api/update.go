@@ -9,6 +9,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
 
@@ -159,7 +160,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		for idx := 0; ; idx++ {
 			child.id = x.UniqueString(c.NumCharsUnique)
 			log.WithField("id", child.id).Debug("Checking availability of new id")
-			if isnew := c.Store.IsNew(c.TablePrefix, child.id); isnew {
+			if isnew := store.Get().IsNew(child.id); isnew {
 				log.WithField("id", child.id).Debug("New id available")
 				break
 			}
@@ -204,7 +205,7 @@ func (n *Update) Execute(c *req.Context) error {
 		return errors.New("No instructions generated")
 	}
 
-	if rerr := c.Store.Commit(c.TablePrefix, its); rerr != nil {
+	if rerr := store.Get().Commit(its); rerr != nil {
 		return rerr
 	}
 
