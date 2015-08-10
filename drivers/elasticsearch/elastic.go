@@ -1,12 +1,15 @@
-package search
+package elasticsearch
 
 import (
 	"errors"
 	"reflect"
 
+	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/x"
 	"gopkg.in/olivere/elastic.v2"
 )
+
+var log = x.Log("elasticsearch")
 
 // Elastic encapsulates elastic search client, and implements methods declared
 // by search.Engine.
@@ -23,7 +26,13 @@ type ElasticQuery struct {
 // existence of "gocrud" index and creates it, if missing. Note that
 // Init does NOT do mapping necessary to do exact-value term matching
 // for strings etc. That needs to be done externally.
-func (es *Elastic) Init(url string) {
+func (es *Elastic) Init(args ...string) {
+	if len(args) != 1 {
+		log.WithField("args", args).Fatal("Invalid arguments")
+		return
+	}
+	url := args[0]
+
 	log.Debug("Initializing connection to ElaticSearch")
 	var opts []elastic.ClientOptionFunc
 	opts = append(opts, elastic.SetURL(url))
@@ -86,14 +95,14 @@ func (es *Elastic) Update(doc x.Doc) error {
 // set the mapping to "index": "not_analyzed".
 // https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
 func (eq *ElasticQuery) MatchExact(field string,
-	value interface{}) Query {
+	value interface{}) search.Query {
 	tq := elastic.NewTermQuery(field, value)
 	eq.ss = eq.ss.Query(&tq)
 	return eq
 }
 
 // Order sorts the results for the given field.
-func (eq *ElasticQuery) Order(field string) Query {
+func (eq *ElasticQuery) Order(field string) search.Query {
 	if field[:1] == "-" {
 		eq.ss = eq.ss.Sort(field[1:], false)
 	} else {
@@ -103,7 +112,7 @@ func (eq *ElasticQuery) Order(field string) Query {
 }
 
 // Limit limits the number of results to num.
-func (eq *ElasticQuery) Limit(num int) Query {
+func (eq *ElasticQuery) Limit(num int) search.Query {
 	eq.ss = eq.ss.Size(num)
 	return eq
 }
@@ -129,8 +138,13 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 }
 
 // NewQuery creates a new query object, to return results of type kind.
-func (es *Elastic) NewQuery(kind string) Query {
+func (es *Elastic) NewQuery(kind string) search.Query {
 	eq := new(ElasticQuery)
 	eq.ss = es.client.Search("gocrud").Type(kind)
 	return eq
+}
+
+func init() {
+	log.Info("Initing elasticsearch")
+	search.Register("elasticsearch", new(Elastic))
 }

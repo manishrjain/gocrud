@@ -54,9 +54,9 @@ type Query interface {
 
 // Engine provides the interface to be implemented to support search engines.
 type Engine interface {
-	// Init should be used for initializing search engine. The string argument
+	// Init should be used for initializing search engine. The string arguments
 	// can be used differently by different engines.
-	Init(string)
+	Init(args ...string)
 
 	// Update doc into index. Note that doc.NanoTs should be utilized to implement
 	// any sort of versioning facility provided by the search engine, to avoid
@@ -71,3 +71,27 @@ type Engine interface {
 // Where("field =", "something") or
 // Where("field >", "something") or
 // Where("field <", "something")
+
+var dengine Engine
+
+func Register(name string, driver Engine) {
+	if driver == nil {
+		log.WithField("search", name).Fatal("nil engine")
+		return
+	}
+	if dengine != nil {
+		log.WithField("search", name).Fatal("Register called twice")
+		return
+	}
+
+	log.WithField("search", name).Debug("Registering search engine")
+	dengine = driver
+}
+
+func Get() Engine {
+	if dengine == nil {
+		log.Fatal("No engine registered")
+		return nil
+	}
+	return dengine
+}

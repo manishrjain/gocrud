@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	_ "github.com/manishrjain/gocrud/drivers/elasticsearch"
 	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -26,7 +27,7 @@ func main() {
 		return
 	}
 
-	engine := new(search.Elastic)
+	engine := search.Get()
 	engine.Init("http://" + *eip + ":9200")
 
 	r := rand.Intn(100)
