@@ -16,6 +16,7 @@ import (
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 
+	// _ "github.com/manishrjain/gocrud/drivers/elasticsearch"
 	_ "github.com/manishrjain/gocrud/drivers/leveldb"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
 	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
@@ -55,6 +56,7 @@ type User struct {
 }
 
 type SimpleIndexer struct {
+	c *req.Context
 }
 
 func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
@@ -66,6 +68,21 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 	rdoc.Id = e.Id
 	rdoc.Kind = e.Kind
 	rdoc.NanoTs = int64(rand.Intn(1000))
+
+	/*
+		result, err := api.NewQuery(e.Kind, e.Id).UptoDepth(0).Run(c)
+		if err != nil {
+			x.LogErr(log, err).Fatal("While querying db")
+			return rdoc
+		}
+		rdoc.NanoTs = result.MaxTimestamp()
+		js, err := result.ToJson()
+		if err != nil {
+			x.LogErr(log, err).Fatal("While getting json")
+			return rdoc
+		}
+		rdoc.Data = string(js)
+	*/
 	return
 }
 
@@ -102,6 +119,8 @@ func main() {
 
 	// Initialize leveldb.
 	store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
+	// Initialize Elasticsearch.
+	// search.Get().Init("http://192.168.59.103:9200")
 
 	// Other possible initializations. Remember to import the right driver.
 	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
@@ -109,9 +128,11 @@ func main() {
 	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
-	c.Indexer = SimpleIndexer{}
-	c.RunIndexer(2)
-	defer c.WaitForIndexer()
+	/*
+		c.Indexer = SimpleIndexer{}
+		c.RunIndexer(2)
+		defer c.WaitForIndexer()
+	*/
 
 	log.Debug("Store initialized. Checking search...")
 	uid := newUser()

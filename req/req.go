@@ -16,7 +16,6 @@ var log = x.Log("req")
 
 type Context struct {
 	NumCharsUnique int // 62^num unique strings
-	Engine         search.Engine
 	Indexer        search.Indexer
 	updates        chan x.Entity
 	wg             *sync.WaitGroup
@@ -27,10 +26,10 @@ func (c *Context) processChannel() {
 	for entity := range c.updates {
 		doc := c.Indexer.Regenerate(entity)
 		log.WithField("doc", doc).Debug("Regenerated doc")
-		if c.Engine == nil {
+		if search.Get() == nil {
 			continue
 		}
-		err := c.Engine.Update(doc)
+		err := search.Get().Update(doc)
 		if err != nil {
 			x.LogErr(log, err).WithField("doc", doc).Error("While updating doc")
 		}

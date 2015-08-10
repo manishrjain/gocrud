@@ -209,7 +209,7 @@ func (n *Update) Execute(c *req.Context) error {
 		return rerr
 	}
 
-	{
+	if c.Indexer != nil {
 		// This block of code figures out which entities have been modified, runs
 		// OnUpdate calls on them, to then compile a list of unique entities which
 		// need to be regenerated, and sends them off to the c.Updates channel.
