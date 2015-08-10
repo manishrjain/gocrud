@@ -13,11 +13,13 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/manishrjain/gocrud/api"
 	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 
 	// _ "github.com/manishrjain/gocrud/drivers/elasticsearch"
 	_ "github.com/manishrjain/gocrud/drivers/leveldb"
+	_ "github.com/manishrjain/gocrud/drivers/memsearch"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
 	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
 	// _ "github.com/manishrjain/gocrud/drivers/cassandra"
@@ -69,20 +71,12 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 	rdoc.Kind = e.Kind
 	rdoc.NanoTs = int64(rand.Intn(1000))
 
-	/*
-		result, err := api.NewQuery(e.Kind, e.Id).UptoDepth(0).Run(c)
-		if err != nil {
-			x.LogErr(log, err).Fatal("While querying db")
-			return rdoc
-		}
-		rdoc.NanoTs = result.MaxTimestamp()
-		js, err := result.ToJson()
-		if err != nil {
-			x.LogErr(log, err).Fatal("While getting json")
-			return rdoc
-		}
-		rdoc.Data = string(js)
-	*/
+	result, err := api.NewQuery(e.Kind, e.Id).UptoDepth(0).Run(c)
+	if err != nil {
+		x.LogErr(log, err).Fatal("While querying db")
+		return rdoc
+	}
+	rdoc.Data = result.ToMap()
 	return
 }
 
@@ -128,11 +122,10 @@ func main() {
 	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
-	/*
-		c.Indexer = SimpleIndexer{}
-		c.RunIndexer(2)
-		defer c.WaitForIndexer()
-	*/
+	search.Get().Init("memsearch")
+	c.Indexer = SimpleIndexer{}
+	c.RunIndexer(2)
+	defer c.WaitForIndexer()
 
 	log.Debug("Store initialized. Checking search...")
 	uid := newUser()
@@ -240,6 +233,18 @@ func main() {
 	fmt.Print("Added Comment on Like")
 	user = printAndGetUser(uid)
 
+	{
+		docs, err := search.Get().NewQuery("Like").Order("data.source").Run()
+		if err != nil {
+			x.LogErr(log, err).Fatal("While searching for Post")
+			return
+		}
+		for _, doc := range docs {
+			log.WithField("doc", doc).Debug("Resulting doc")
+		}
+		log.Debug("Search query over")
+	}
+
 	post = user.Post[0]
 	if len(post.Comment) == 0 {
 		log.Fatalf("No comment found: %+v", post)
@@ -288,4 +293,16 @@ func main() {
 	// By now we have a fairly complex Post structure. CRUD for
 	// which would have been a lot of work to put together using
 	// typical SQL / NoSQL tables.
+
+	{
+		docs, err := search.Get().NewQuery("Post").MatchExact("data.url", "www.google.com").Run()
+		if err != nil {
+			x.LogErr(log, err).Fatal("While searching for Post")
+			return
+		}
+		for _, doc := range docs {
+			log.WithField("doc", doc).Debug("Resulting doc")
+		}
+		log.Debug("Search query over")
+	}
 }

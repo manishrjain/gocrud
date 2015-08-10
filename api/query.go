@@ -218,7 +218,7 @@ func (r *Result) Debug(level int) {
 	}
 }
 
-func (r *Result) toJson() (data map[string]interface{}) {
+func (r *Result) ToMap() (data map[string]interface{}) {
 	data = make(map[string]interface{})
 	data["id"] = r.Id
 	data["kind"] = r.Kind
@@ -242,7 +242,7 @@ func (r *Result) toJson() (data map[string]interface{}) {
 			if kind != child.Kind {
 				continue
 			}
-			l = append(l, child.toJson())
+			l = append(l, child.ToMap())
 		}
 		data[kind] = l
 	}
@@ -255,7 +255,7 @@ func (r *Result) toJson() (data map[string]interface{}) {
 // Note that this doesn't find the "root" from the Result pointer, instead
 // doing the processing only from the current Result pointer.
 func (r *Result) ToJson() ([]byte, error) {
-	data := r.toJson()
+	data := r.ToMap()
 	return json.Marshal(data)
 }
 
