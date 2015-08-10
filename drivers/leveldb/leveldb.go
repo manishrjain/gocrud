@@ -12,7 +12,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-var log = x.Log("store")
+var log = x.Log("leveldb")
 
 type Leveldb struct {
 	db  *leveldb.DB

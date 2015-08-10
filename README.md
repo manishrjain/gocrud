@@ -11,7 +11,7 @@ go build github.com/manishrjain/gocrud
 ```
 
 ## Library
-This library is built to allow these properties for the data:
+This library is built to follow these principles:
 
 1. **Versioning**: Keep track of all edits to the data, including deletion operations.
 1. **Authorship**: Be able to track who edited (/deleted) what.
@@ -31,28 +31,79 @@ The library does this by utilizing Graph operations, but without using a Graph d
 ## Datastore support
 This library supports both SQL and NoSQL databases including other datastores, namely
 
-1. Cassandra
-1. LevelDB
-1. Any SQL stores (via http://golang.org/pkg/database/sql/)
-1. PostGreSQL (thanks philips)
-1. Google Datastore
-1. RethinkDB (thanks dancannon)
-1. MongoDB (thanks wolfeidau)
-1. _Any others as requested_
-
-**Note**: To get all of these dependencies, run `go get github.com/manishrjain/gocrud`.
-
-In fact, it exposes a simple interface for operations requiring databases, so you can easily add your favorite database (or request for addition).
+##### Cassandra
 ```go
-type Store interface {
-  Init(dbtype string, tablename string)
-  Commit(tablePrefix string, its []*x.Instruction) error
-  IsNew(tablePrefix string, subject string) bool
-  GetEntity(tablePrefix string, subject string) ([]x.Instruction, error)
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/cassandra"
+
+func main() {
+	// You can use table_cassandra.cql to generate the table.
+	// Arguments: ip address, keyspace, table
+	store.Get().Init("192.168.59.103", "crudtest", "instructions")
 }
 ```
 
-The data is stored in a flat “tuple” format, to allow for horizontal scaling across machines in both SQL and NoSQL databases. Again, no data is ever deleted, to allow for log tracking all the changes.
+##### LevelDB
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/leveldb"
+
+func main() {
+	store.Get().Init("leveldb", "/tmp/ldb_"+x.UniqueString(10))
+}
+```
+
+##### Any SQL stores (via http://golang.org/pkg/database/sql/)
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/sqlstore"
+
+func main() {
+	// Arguments: store name, connection, table name
+	store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
+}
+```
+##### PostGreSQL (thanks philips)
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/sqlstore"
+
+func main() {
+	// Arguments: store name, connection, table name
+	store.Get().Init("postgres", "postgres://localhost/test?sslmode=disable", "instructions")
+}
+```
+
+##### Google Datastore
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/datastore"
+
+func main() {
+	// Arguments: table prefix, google project id.
+	store.Get().Init("Test-", "project-id")
+}
+```
+
+##### RethinkDB (thanks dancannon)
+Undergoing changes
+
+##### MongoDB (thanks wolfeidau)
+Undergoing changes
+
+##### _Any others as requested_
+Drivers for any other data stores can be easily added by implementing the `Store` interface below.
+
+```go
+type Store interface {
+  Init(args ...string)
+  Commit(its []*x.Instruction) error
+  IsNew(subject string) bool
+  GetEntity(subject string) ([]x.Instruction, error)
+}
+```
+
+The data is stored in a flat “tuple” format, to allow for horizontal scaling across machines in both SQL and NoSQL databases. Again, no data is ever deleted (**Retention** principle), to allow for log tracking all the changes.
 
 ## Example Usage
 
