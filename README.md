@@ -49,7 +49,7 @@ import "github.com/manishrjain/gocrud/store"
 import _ "github.com/manishrjain/gocrud/drivers/leveldb"
 
 func main() {
-	store.Get().Init("leveldb", "/tmp/ldb_"+x.UniqueString(10))
+	store.Get().Init("/tmp/ldb_"+x.UniqueString(10))
 }
 ```
 
@@ -86,7 +86,15 @@ func main() {
 ```
 
 ##### RethinkDB (thanks dancannon)
-Undergoing changes
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
+
+func main() {
+	// Arguments: IP address with port, database, tablename
+	store.Get().Init("192.168.59.103:28015", "test", "instructions")
+}
+```
 
 ##### MongoDB (thanks wolfeidau)
 ```go
@@ -98,7 +106,6 @@ func main() {
 	store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 }
 ```
-Undergoing changes
 
 ##### _Any others as requested_
 Drivers for any other data stores can be easily added by implementing the `Store` interface below.

@@ -16,11 +16,12 @@ import (
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 
+	_ "github.com/manishrjain/gocrud/drivers/leveldb"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
-	// "github.com/manishrjain/gocrud/drivers/leveldb"
 	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
 	// _ "github.com/manishrjain/gocrud/drivers/cassandra"
-	_ "github.com/manishrjain/gocrud/drivers/mongodb"
+	// _ "github.com/manishrjain/gocrud/drivers/mongodb"
+	// _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
 )
 
 var storeType = flag.String("store", "leveldb",
@@ -99,95 +100,14 @@ func main() {
 	c = new(req.Context)
 	c.NumCharsUnique = 10 // 62^10 permutations
 
-	/*
-		if *storeType == "leveldb" {
-			l := new(store.Leveldb)
-			l.SetBloomFilter(13)
-			c.Store = l
-			c.Store.Init(*storeType, "/tmp/ldb_"+x.UniqueString(10))
+	// Initialize leveldb.
+	store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
 
-		} else if *storeType == "cass" {
-			cluster := gocql.NewCluster("192.168.59.103")
-			cluster.Keyspace = "crudtest"
-			cluster.Consistency = gocql.Quorum
-			cass := new(store.Cassandra)
-
-			if session, err := cluster.CreateSession(); err != nil {
-				panic(err)
-			} else {
-				cass.SetSession(session)
-			}
-			c.Store = cass
-			c.Store.Init(*storeType, "instructions")
-
-		} else if *storeType == "mysql" {
-			db, err := sql.Open("mysql", "root@tcp(127.0.0.1:3306)/test")
-			if err != nil {
-				panic(err)
-			}
-			if err = db.Ping(); err != nil {
-				panic(err)
-			}
-			log.Info("Connection to mysql successful")
-			sqldb := new(store.Sql)
-			sqldb.SetDb(db)
-			c.Store = sqldb
-			c.Store.Init(*storeType, "instructions")
-
-		} else if *storeType == "postgres" {
-			db, err := sql.Open("postgres", "postgres://localhost/test?sslmode=disable")
-			if err != nil {
-				panic(err)
-			}
-			if err = db.Ping(); err != nil {
-				panic(err)
-			}
-			log.Info("Connection to postgres successful")
-			sqldb := new(store.Sql)
-			sqldb.SetDb(db)
-			c.Store = sqldb
-			c.Store.Init(*storeType, "instructions")
-
-		} else if *storeType == "rethinkdb" {
-			session, err := r.Connect(r.ConnectOpts{
-				// Address:  "192.168.59.103:28015",
-				Address:  "localhost:28015",
-				Database: "crudtest",
-			})
-			if err != nil {
-				panic(err)
-			}
-			rethinkdb := new(store.RethinkDB)
-			rethinkdb.SetSession(session)
-			c.Store = rethinkdb
-			c.Store.Init(*storeType, "instructions")
-
-		} else if *storeType == "mongodb" {
-			// "192.168.59.103:27017"
-			session, err := mgo.Dial("localhost:27017")
-			if err != nil {
-				panic(err)
-			}
-			session.SetMode(mgo.Monotonic, true)
-			mongodb := new(store.MongoDB)
-			mongodb.SetSession(session, "crudtest")
-			c.Store = mongodb
-			c.Store.Init(*storeType, "instructions")
-
-		} else if *storeType == "datastore" {
-			c.TablePrefix = "Test-"
-			c.Store = new(store.Datastore)
-			c.Store.Init(*storeType, "gce-project-id")
-
-		} else {
-			panic("Invalid store")
-		}
-	*/
-
-	// store.Get().Init("leveldb", "/tmp/ldb_"+x.UniqueString(10))
+	// Other possible initializations. Remember to import the right driver.
 	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
 	// store.Get().Init("192.168.59.103", "crudtest", "instructions")
-	store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
+	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
+	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
 	c.Indexer = SimpleIndexer{}
 	c.RunIndexer(2)
