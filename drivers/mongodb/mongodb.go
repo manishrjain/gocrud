@@ -1,4 +1,4 @@
-package store
+package mongodb
 
 // To test this mongodb integration, run mongodb in docker
 // docker run -d --name mongo -p 27017:27017 mongo:latest
@@ -8,10 +8,13 @@ package store
 // For linux it's 127.0.0.1.
 
 import (
+	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
+
+var log = x.Log("mongodb")
 
 // MongoDB store backed by MongoDB
 type MongoDB struct {
@@ -20,19 +23,28 @@ type MongoDB struct {
 	collection string
 }
 
-// SetSession configure a mongodb session and database name
-func (mdb *MongoDB) SetSession(session *mgo.Session, database string) {
-	mdb.session = session
-	mdb.database = database
-}
-
 // Init setup a new collection using the name provided
-func (mdb *MongoDB) Init(_ string, collection string) {
-	mdb.collection = collection
+func (mdb *MongoDB) Init(args ...string) {
+	if len(args) != 3 {
+		log.WithField("args", args).Fatal("Invalid arguments")
+		return
+	}
+
+	ipaddr := args[0]
+	session, err := mgo.Dial(ipaddr)
+	if err != nil {
+		x.LogErr(log, err).Fatal("While dialing")
+		return
+	}
+	session.SetMode(mgo.Monotonic, true)
+	mdb.session = session
+	mdb.database = args[1]
+	mdb.collection = args[2]
+	log.Debug("Mongodb registered")
 }
 
 // Commit inserts the instructions into the collection as documents
-func (mdb *MongoDB) Commit(_ string, its []*x.Instruction) error {
+func (mdb *MongoDB) Commit(its []*x.Instruction) error {
 	c := mdb.session.DB(mdb.database).C(mdb.collection)
 
 	for _, i := range its {
@@ -49,7 +61,7 @@ func (mdb *MongoDB) Commit(_ string, its []*x.Instruction) error {
 }
 
 // IsNew checks if the supplied subject identifier exists in the collection
-func (mdb *MongoDB) IsNew(_ string, subject string) bool {
+func (mdb *MongoDB) IsNew(subject string) bool {
 	c := mdb.session.DB(mdb.database).C(mdb.collection)
 
 	i, err := c.Find(bson.M{"subjectid": subject}).Count()
@@ -67,7 +79,7 @@ func (mdb *MongoDB) IsNew(_ string, subject string) bool {
 }
 
 // GetEntity retrieves all documents matching the subject identifier
-func (mdb *MongoDB) GetEntity(tablePrefix string, subject string) (result []x.Instruction, err error) {
+func (mdb *MongoDB) GetEntity(subject string) (result []x.Instruction, err error) {
 	c := mdb.session.DB(mdb.database).C(mdb.collection)
 
 	err = c.Find(bson.M{"subjectid": subject}).All(&result)
@@ -76,4 +88,9 @@ func (mdb *MongoDB) GetEntity(tablePrefix string, subject string) (result []x.In
 	}
 
 	return result, err
+}
+
+func init() {
+	log.Info("Registering mongodb")
+	store.Register("mongodb", new(MongoDB))
 }

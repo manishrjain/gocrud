@@ -89,6 +89,15 @@ func main() {
 Undergoing changes
 
 ##### MongoDB (thanks wolfeidau)
+```go
+import "github.com/manishrjain/gocrud/store"
+import _ "github.com/manishrjain/gocrud/drivers/mongodb"
+
+func main() {
+	// Arguments: IP address with port, database, tablename
+	store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
+}
+```
 Undergoing changes
 
 ##### _Any others as requested_
