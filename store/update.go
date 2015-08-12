@@ -1,5 +1,4 @@
-// api package provides the CRUD apis for data manipulation.
-package api
+package store
 
 import (
 	"encoding/json"
@@ -9,11 +8,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/manishrjain/gocrud/req"
-	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
-
-var log = x.Log("api")
 
 // Update stores the create and update instructions, acting as the modifier
 // to the entity Update relates to.
@@ -161,7 +157,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		for idx := 0; ; idx++ { // Retry loop.
 			child.id = x.UniqueString(c.NumCharsUnique)
 			log.WithField("id", child.id).Debug("Checking availability of new id")
-			if isnew := store.Get().IsNew(child.id); isnew {
+			if isnew := Get().IsNew(child.id); isnew {
 				log.WithField("id", child.id).Debug("New id available")
 				break
 			}
@@ -218,7 +214,7 @@ func (n *Update) Execute(c *req.Context) error {
 		return errors.New("No instructions generated")
 	}
 
-	if rerr := store.Get().Commit(its); rerr != nil {
+	if rerr := Get().Commit(its); rerr != nil {
 		return rerr
 	}
 

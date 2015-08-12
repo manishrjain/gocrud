@@ -45,45 +45,45 @@ And while reading, one would have to join these tables to get the entire structu
 *This is how various operations can be performed using gocrud library*
 ##### Create a new Post
 ```go
-p := api.Get("User", userid).SetSource(userid).AddChild("Post")
+p := store.NewUpdate("User", userid).SetSource(userid).AddChild("Post")
 p.Set("url", "www.google.com").Set("body", "You can search for cat videos here")
 p.Set("tags", [arbitrary Go data]).Execute(ctx)
 ```
 
 ##### Like and Comment
 ```go
-p := api.Get("Post", postid).SetSource(userid)
+p := store.NewUpdate("Post", postid).SetSource(userid)
 p.AddChild("Comment").Set("body", "Comment on the post")
 p.AddChild("Like").Set("thumbsup", true).Execute(ctx)
 ```
 
 ##### Reply to comment
 ```go
-c := api.Get("Comment", commentid).SetSource(userid)
+c := store.NewUpdate("Comment", commentid).SetSource(userid)
 c.AddChild("Comment").Set("body", "Comment on comment").Execute(ctx)
 ```
 
 ##### Comment on Like (*because we can, easily*)
 ```go
-l := api.Get("Like", likeid).SetSource(userid)
+l := store.NewUpdate("Like", likeid).SetSource(userid)
 l.AddChild("Comment").Set("body", "Nice that you like this").Execute(ctx)
 ```
 
 ##### Add some property `censored`
 ```go
-api.Get("Comment", commentid).SetSource(uid).Set("censored", true).Execute(ctx)
+store.NewUpdate("Comment", commentid).SetSource(uid).Set("censored", true).Execute(ctx)
 ```
 
 ##### Mark deleted
 Something marked as deleted would never be retrieved.
 ```go
-api.Get("Like", like.Id).SetSource(newUser()).MarkDeleted().Execute(ctx)
+store.NewUpdate("Like", like.Id).SetSource(newUser()).MarkDeleted().Execute(ctx)
 ```
 
 ##### Read User
 Now finally, read it all back
 ```go
-q := api.NewQuery("User", uid).Collect("Post")
+q := store.NewQuery(uid).Collect("Post")
 // Note that Collect() on a node would return child node query pointer,
 // and run operations there.
 q.Collect("Like").UptoDepth(10)

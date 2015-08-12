@@ -1,13 +1,17 @@
-package api
+package store
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sort"
 
 	"github.com/manishrjain/gocrud/req"
-	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
+)
+
+var (
+	ErrNoParent = errors.New("No parent found")
 )
 
 // Query stores the read instrutions, storing the instruction set
@@ -41,11 +45,26 @@ type runResult struct {
 	Err    error
 }
 
+// Retrieve the parent id for given entity id. Return ErrNoParent if parent is
+// not present. Otherwise, if an error occurs during retrieval, returns that.
+func Parent(id string) (parentid string, rerr error) {
+	its, err := Get().GetEntity(id)
+	if err != nil {
+		x.LogErr(log, err).WithField("id", id).Error("While retrieving entity")
+		return "", err
+	}
+	for _, it := range its {
+		if it.Predicate == "_parent_" {
+			return it.ObjectId, nil
+		}
+	}
+	return "", ErrNoParent
+}
+
 // NewQuery is the main entrypoint to data store queries. Returns back a Query
 // object pointer, to run read instructions on.
-func NewQuery(kind, id string) *Query {
+func NewQuery(id string) *Query {
 	q := new(Query)
-	q.kind = kind
 	q.id = id
 	return q
 }
@@ -98,7 +117,7 @@ func (q *Query) root() *Query {
 
 func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 	log.Debugf("Query: %+v", q)
-	its, err := store.Get().GetEntity(q.id)
+	its, err := Get().GetEntity(q.id)
 	if err != nil {
 		x.LogErr(log, err).Error("While retrieving: ", q.id)
 		ch <- runResult{Result: nil, Err: err}

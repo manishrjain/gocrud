@@ -11,7 +11,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	"github.com/manishrjain/gocrud/api"
 	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
@@ -71,7 +70,7 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 	rdoc.Kind = e.Kind
 	rdoc.NanoTs = int64(rand.Intn(1000))
 
-	result, err := api.NewQuery(e.Kind, e.Id).UptoDepth(0).Run(c)
+	result, err := store.NewQuery(e.Id).UptoDepth(0).Run(c)
 	if err != nil {
 		x.LogErr(log, err).Fatal("While querying db")
 		return rdoc
@@ -87,7 +86,7 @@ func newUser() string {
 const sep = "================================"
 
 func printAndGetUser(uid string) (user User) {
-	result, err := api.NewQuery("User", uid).UptoDepth(10).Run(c)
+	result, err := store.NewQuery(uid).UptoDepth(10).Run(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -134,7 +133,7 @@ func main() {
 	// Let's get started. User 'uid' creates a new Post.
 	// This Post shares a url, adds some text and some tags.
 	tags := [3]string{"search", "cat", "videos"}
-	err = api.NewUpdate("User", uid).SetSource(uid).AddChild("Post").
+	err = store.NewUpdate("User", uid).SetSource(uid).AddChild("Post").
 		Set("url", "www.google.com").Set("body", "You can search for cat videos here").
 		Set("tags", tags).Execute(c)
 	if err != nil {
@@ -156,7 +155,7 @@ func main() {
 	user := printAndGetUser(uid)
 	post := user.Post[0]
 
-	p := api.NewUpdate("Post", post.Id).SetSource(newUser())
+	p := store.NewUpdate("Post", post.Id).SetSource(newUser())
 	p.AddChild("Like").Set("thumb", 1)
 	p.AddChild("Comment").Set("body",
 		fmt.Sprintf("Comment %s on the post", x.UniqueString(2)))
@@ -166,7 +165,7 @@ func main() {
 	}
 
 	// Step 2: Another user would now like the post.
-	p = api.NewUpdate("Post", post.Id).SetSource(newUser())
+	p = store.NewUpdate("Post", post.Id).SetSource(newUser())
 	p.AddChild("Like").Set("thumb", 1)
 	err = p.Execute(c)
 	if err != nil {
@@ -183,7 +182,7 @@ func main() {
 
 	// Now another user likes and replies to the comment that was added above.
 	// So, it's a comment within a comment.
-	p = api.NewUpdate("Comment", comment.Id).SetSource(newUser())
+	p = store.NewUpdate("Comment", comment.Id).SetSource(newUser())
 	p.AddChild("Like").Set("thumb", 1)
 	p.AddChild("Comment").Set("body",
 		fmt.Sprintf("Comment %s on comment", x.UniqueString(2)))
@@ -223,7 +222,7 @@ func main() {
 
 	// Another user Comments on the Like on Comment on Post.
 
-	p = api.NewUpdate("Like", like.Id).SetSource(newUser()).
+	p = store.NewUpdate("Like", like.Id).SetSource(newUser()).
 		AddChild("Comment").Set("body",
 		fmt.Sprintf("Comment %s on Like", x.UniqueString(2)))
 	err = p.Execute(c)
@@ -250,12 +249,12 @@ func main() {
 		log.Fatalf("No comment found: %+v", post)
 	}
 	comment = post.Comment[0]
-	p = api.NewUpdate("Comment", comment.Id).SetSource(newUser()).Set("censored", true)
+	p = store.NewUpdate("Comment", comment.Id).SetSource(newUser()).Set("censored", true)
 	err = p.Execute(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	q := api.NewQuery("Comment", comment.Id).UptoDepth(0)
+	q := store.NewQuery(comment.Id).UptoDepth(0)
 	result, err := q.Run(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -272,13 +271,13 @@ func main() {
 		log.Fatalf("No like found: %+v", post)
 	}
 	like = post.Like[0]
-	p = api.NewUpdate("Like", like.Id).SetSource(newUser()).MarkDeleted()
+	p = store.NewUpdate("Like", like.Id).SetSource(newUser()).MarkDeleted()
 	err = p.Execute(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 
-	q = api.NewQuery("User", uid).Collect("Post")
+	q = store.NewQuery(uid).Collect("Post")
 	q.Collect("Like").UptoDepth(10)
 	q.Collect("Comment").UptoDepth(10).FilterOut("censored")
 	result, err = q.Run(c)

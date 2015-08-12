@@ -1,5 +1,6 @@
 // Package store provides an interface for data store operations, to
-// allow for easy extensibility to support various datastores.
+// allow for easy extensibility to support various datastores. Also, provides
+// the standardized Update and Query interfaces to data stores.
 package store
 
 import (
