@@ -3,11 +3,58 @@ Go library to simplify creating, updating and deleting arbitrary depth structure
 
  * [Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
  * [Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
+ * [Example Usage](example.md)
 
 ## Build and Run
 ```bash
 go build github.com/manishrjain/gocrud
-./gocrud  # By default, uses leveldb as a datastore.
+./gocrud  # By default, uses leveldb as a datastore, and memsearch as search engine.
+```
+
+## Why?
+Having built over 3 different startup backends, I think a lot of time is wasted figuring out and coding CRUD for data structures. In addition, the choice of database has to be made up front, which causes a lot of headache for startup founders. Gocrud was written with the aim to make CRUD easy, and provide the flexibility to switch out both the underlying storage and search engines at any stage of development.
+
+#### Data stores
+Datastore | Supported
+--- | :---:
+LevelDB | Yes 
+MySQL | Yes 
+PostgreSQL | Yes
+Cassandra | Yes
+MongoDB | Yes
+Google Datastore | Yes
+RethinkDB | Yes
+Amazon DynamoDB | No
+**[Datastore usage](datastore.md)** shows how to use and initialize various datastores. One can add support for more by implementing this interface:
+```go
+type Store interface {
+  Init(args ...string)
+  Commit(its []*x.Instruction) error
+  IsNew(subject string) bool
+  GetEntity(subject string) ([]x.Instruction, error)
+}
+```
+
+#### Search engines
+Search Engine | Supported
+--- | :---:
+Elastic Search | Yes
+Solr | No
+
+Can be added by implementing these interfaces:
+```go
+type Engine interface {
+	Init(args ...string)
+	Update(x.Doc) error
+	NewQuery(kind string) Query
+}
+
+type Query interface {
+	MatchExact(field string, value interface{}) Query
+	Limit(num int) Query
+	Order(field string) Query
+	Run() ([]x.Doc, error)
+}
 ```
 
 ## Library
@@ -26,325 +73,10 @@ The library makes it easy to have *Parent-Child* relationships, quite common in 
 ```
 And be able to traverse these relationships and retrieve all of the children, grandchildren etc. For e.g. `(User -> Post -> [(Comment -> Like), Like])`
 
-The library does this by utilizing Graph operations, but without using a Graph database. This means the library can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice.
-
-## Datastore support
-This library supports both SQL and NoSQL databases including other datastores, namely
-
-##### Cassandra
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/cassandra"
-
-func main() {
-	// You can use table_cassandra.cql to generate the table.
-	// Arguments: ip address, keyspace, table
-	store.Get().Init("192.168.59.103", "crudtest", "instructions")
-}
-```
-
-##### LevelDB
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/leveldb"
-
-func main() {
-	store.Get().Init("/tmp/ldb_"+x.UniqueString(10))
-}
-```
-
-##### Any SQL stores (via http://golang.org/pkg/database/sql/)
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/sqlstore"
-
-func main() {
-	// Arguments: store name, connection, table name
-	store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
-}
-```
-##### PostGreSQL (thanks philips)
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/sqlstore"
-
-func main() {
-	// Arguments: store name, connection, table name
-	store.Get().Init("postgres", "postgres://localhost/test?sslmode=disable", "instructions")
-}
-```
-
-##### Google Datastore
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/datastore"
-
-func main() {
-	// Arguments: table prefix, google project id.
-	store.Get().Init("Test-", "project-id")
-}
-```
-
-##### RethinkDB (thanks dancannon)
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
-
-func main() {
-	// Arguments: IP address with port, database, tablename
-	store.Get().Init("192.168.59.103:28015", "test", "instructions")
-}
-```
-
-##### MongoDB (thanks wolfeidau)
-```go
-import "github.com/manishrjain/gocrud/store"
-import _ "github.com/manishrjain/gocrud/drivers/mongodb"
-
-func main() {
-	// Arguments: IP address with port, database, tablename
-	store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
-}
-```
-
-##### _Any others as requested_
-Drivers for any other data stores can be easily added by implementing the `Store` interface below.
-
-```go
-type Store interface {
-  Init(args ...string)
-  Commit(its []*x.Instruction) error
-  IsNew(subject string) bool
-  GetEntity(subject string) ([]x.Instruction, error)
-}
-```
-
-The data is stored in a flat “tuple” format, to allow for horizontal scaling across machines in both SQL and NoSQL databases. Again, no data is ever deleted (**Retention** principle), to allow for log tracking all the changes.
-
-## Example Usage
-
-Let's take a social backend as an example ([based on social.go](example/social/social.go))
-- Users create posts
-- Other users like Posts
-- Other users comment on Posts
-- Other users like the comments
-- Other users comment on the comment (aka reply)
-- (Extra) Other users like the comment on the comment
-- (Extra) Other users comment on the like
-
-![Social data structures](res/social_graph.bmp)
-
-A typical table for a Post would be like this:
-
-##### POST
-Column | Type | Description
---- | --- | ---
-Id | string | Unique identifier of the post
-VersionId | string | To identify edits to the post
-Timestamp | time | Version creation time
-Body | string | Content of the post
-Url | string | Any urls shared
-Image | blob | Any images shared
-User | string | Author of the post
-Privacy | int | Shared with self, friends or the world
-
-##### Comment
-Column | Type | Description
---- | --- | ---
-Id | string | Unique identifier of the comment
-VersionId | string | To identify edits to the comment
-PostId | string | Id of parent post
-CommentId | string | Id of parent comment
-Timestamp | time | Version creation time
-Body | string | Content of the comment
-Url | string | Any urls shared
-User | string | Author of the comment
-
-and so on for **Like**. Then for each of these types, one would have to write functions to create, update, or delete these entities.
-And while reading, one would have to join these tables to get the entire structured data. *All this would be a lot of effort on its own.*
-
-### Instead, enter CRUD
-
-*This is how various operations can be performed using gocrud library*
-##### Create a new Post
-```go
-p := api.Get("User", userid).SetSource(userid).AddChild("Post")
-p.Set("url", "www.google.com").Set("body", "You can search for cat videos here")
-p.Set("tags", [arbitrary Go data]).Execute(ctx)
-```
-
-##### Like and Comment
-```go
-p := api.Get("Post", postid).SetSource(userid)
-p.AddChild("Comment").Set("body", "Comment on the post")
-p.AddChild("Like").Set("thumbsup", true).Execute(ctx)
-```
-
-##### Reply to comment
-```go
-c := api.Get("Comment", commentid).SetSource(userid)
-c.AddChild("Comment").Set("body", "Comment on comment").Execute(ctx)
-```
-
-##### Comment on Like (*because we can, easily*)
-```go
-l := api.Get("Like", likeid).SetSource(userid)
-l.AddChild("Comment").Set("body", "Nice that you like this").Execute(ctx)
-```
-
-##### Add some property `censored`
-```go
-api.Get("Comment", commentid).SetSource(uid).Set("censored", true).Execute(ctx)
-```
-
-##### Mark deleted
-Something marked as deleted would never be retrieved.
-```go
-api.Get("Like", like.Id).SetSource(newUser()).MarkDeleted().Execute(ctx)
-```
-
-##### Read User
-Now finally, read it all back
-```go
-q := api.NewQuery("User", uid).Collect("Post")
-// Note that Collect() on a node would return child node query pointer,
-// and run operations there.
-q.Collect("Like").UptoDepth(10)
-q.Collect("Comment").UptoDepth(10).FilterOut("censored")
-result, err := q.Run(c)
-js, err := result.ToJson()
-
-// or directly to w http.ResponseWriter
-result.WriteJsonResponse(w)
-```
-
-Sample result produced:
-Full JSON
-```json
-{
-    "Post": [
-        {
-            "Comment": [
-                {
-                    "Comment": [
-                        {
-                            "body": "Comment di on comment",
-                            "id": "w0YDg",
-                            "kind": "Comment",
-                            "source": "uid_IxD",
-                            "ts_millis": 1435373783693
-                        }
-                    ],
-                    "Like": [
-                        {
-                            "Comment": [
-                                {
-                                    "body": "Comment j3 on Like",
-                                    "id": "O1Kqv",
-                                    "kind": "Comment",
-                                    "source": "uid_avi",
-                                    "ts_millis": 1435373783695
-                                }
-                            ],
-                            "id": "PYuUz",
-                            "kind": "Like",
-                            "source": "uid_IxD",
-                            "thumb": 1,
-                            "ts_millis": 1435373783693
-                        }
-                    ],
-                    "body": "Comment gI on the post",
-                    "censored": true,
-                    "id": "xcbbG",
-                    "kind": "Comment",
-                    "source": "uid_rfV",
-                    "ts_millis": 1435373783696
-                }
-            ],
-            "Like": [
-                {
-                    "id": "h5izf",
-                    "kind": "Like",
-                    "source": "uid_uQf",
-                    "thumb": 1,
-                    "ts_millis": 1435373783691
-                },
-                {
-                    "id": "3P1RK",
-                    "kind": "Like",
-                    "source": "uid_Nab",
-                    "thumb": 1,
-                    "ts_millis": 1435373783692
-                }
-            ],
-            "body": "You can search for cat videos here",
-            "id": "6MV1v",
-            "kind": "Post",
-            "source": "uid_rWe",
-            "tags": [
-                "search",
-                "cat",
-                "videos"
-            ],
-            "ts_millis": 1435373783690,
-            "url": "www.google.com"
-        }
-    ],
-    "id": "uid_rWe",
-    "kind": "User",
-    "ts_millis": 0
-}
-```
-
-JSON produced after removing node with `censored`, and the deleted nodes.
-```json
-{
-    "Post": [
-        {
-            "Like": [
-                {
-                    "id": "3P1RK",
-                    "kind": "Like",
-                    "source": "uid_Nab",
-                    "thumb": 1,
-                    "ts_millis": 1435373783692
-                }
-            ],
-            "body": "You can search for cat videos here",
-            "id": "6MV1v",
-            "kind": "Post",
-            "source": "uid_rWe",
-            "tags": [
-                "search",
-                "cat",
-                "videos"
-            ],
-            "ts_millis": 1435373783690,
-            "url": "www.google.com"
-        }
-    ],
-    "id": "uid_rWe",
-    "kind": "User",
-    "ts_millis": 0
-}
-```
-
-To see this in action, run this example:
-```bash
-go build example/social/social.go
-./social
-
-// Also a REST server
-go build example/server/server.go
-./server
-```
-
-These are fairly complex operations on fairly complex data structure,
-CRUD for which would have been a lot of work to put together using typical
-SQL / NoSQL table approach.
+The library does this by utilizing Graph operations, but without using a Graph database. This means the library can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice. See [example usage](example.md)
 
 ## Performance considerations
-For the above example, this is what gets stored in the database (data not exactly the same as above example)
+For the [example](example.md), this is what gets stored in the database:
 ```
 mysql> select * from instructions;
 +------------+--------------+-----------+--------------------------------------+-----------+---------------------+---------+----+
@@ -372,4 +104,6 @@ mysql> select * from instructions;
 18 rows in set (0.00 sec)
 ```
 
-The writes are in constant time. Some of the performance concerns would be around retrieval. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity and it's children. Also, any property filtering that needs to happen would happen in application space, instead of within database. I have ideas around continuous background processing to generate commonly needed data structures, and store them in separate tables to allow for database native querying capabilities, and 1 row read per entity. But, more work on that, if this library finds usage among the Golang crowd.
+The writes are in constant time, where each (entity,predicate) constitutes one row. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity, it's predicates and it's children. This however, shouldn't be much of a concern for any standard data, which has limited number of predicates/properties per entity.
+
+In addition, property value filtering, sorting, full and partial text matching are now being made available via various search engines. Gocrud provides a simple search interface, which provides advanced search functionality right out of the box. Thus, there's a clear distinction between data store and search right from the beginning.
