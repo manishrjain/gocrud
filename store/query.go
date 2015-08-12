@@ -36,8 +36,8 @@ type Object struct {
 type Result struct {
 	Id       string
 	Kind     string
-	Children []*Result
 	Columns  map[string]Object
+	Children []*Result
 }
 
 type runResult struct {

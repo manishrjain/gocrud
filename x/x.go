@@ -129,7 +129,6 @@ const (
 
 // Log returns a logrus.Entry with a package field set.
 func Log(p string) *logrus.Entry {
-	logrus.SetLevel(logrus.DebugLevel)
 	l := logrus.WithFields(logrus.Fields{
 		"package": p,
 	})

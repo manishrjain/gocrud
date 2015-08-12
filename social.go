@@ -27,11 +27,7 @@ import (
 	// _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
 )
 
-var storeType = flag.String("store", "leveldb",
-	"Available stores are cass for cassandra, "+
-		"sql for MySQL, leveldb for LevelDB, "+
-		"datastore for Google Datastore. "+
-		"LevelDB is the default.")
+var debug = flag.Bool("debug", false, "Set debug level.")
 
 var log = x.Log("social")
 var c *req.Context
@@ -69,7 +65,7 @@ func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
 func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 	rdoc.Id = e.Id
 	rdoc.Kind = e.Kind
-	rdoc.NanoTs = int64(rand.Intn(1000))
+	rdoc.NanoTs = time.Now().UnixNano()
 
 	result, err := store.NewQuery(e.Id).UptoDepth(0).Run(c)
 	if err != nil {
@@ -84,19 +80,27 @@ func newUser() string {
 	return "uid_" + x.UniqueString(3)
 }
 
-const sep = "================================"
+const sep1 = "--------------------------------"
+const sep2 = "================================"
+
+func prettyPrintResult(result store.Result) {
+	mresult := result.ToMap()
+	js, err := json.MarshalIndent(mresult, "", "'  ")
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
+	fmt.Printf("\n%s\n%s\n%s\n\n", sep1, string(js), sep2)
+}
 
 func printAndGetUser(uid string) (user User) {
 	result, err := store.NewQuery(uid).UptoDepth(10).Run(c)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	js, err := result.ToJson()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	prettyPrintResult(*result)
 
-	fmt.Printf("\n%s\n%s\n%s\n", sep, string(js), sep)
+	js, err := result.ToJson()
 	if err := json.Unmarshal(js, &user); err != nil || len(user.Post) == 0 {
 		log.Fatalf("Error: %v", err)
 	}
@@ -104,9 +108,13 @@ func printAndGetUser(uid string) (user User) {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-	fmt.Println("Running...")
+	rand.Seed(0) // Keep output consistent.
 	flag.Parse()
+	if *debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		logrus.SetLevel(logrus.ErrorLevel)
+	}
 
 	c = new(req.Context)
 	c.NumCharsUnique = 10 // 62^10 permutations
@@ -140,7 +148,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	fmt.Print("Stored Post")
 
 	// Now let's add a comment and two likes to our new post.
 	// One user would add a comment and one like. Another user would
@@ -153,6 +160,7 @@ func main() {
 	// of that new like entity have the same source.
 	//
 	// So, here's Step 1: A new user would add a comment, and like the post.
+	fmt.Print("Added a new post by user")
 	user := printAndGetUser(uid)
 	post := user.Post[0]
 
@@ -172,7 +180,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	fmt.Print("Added 1 Comment and 2 Like on Post")
+	fmt.Print("Added a Comment and 2 Likes on Post")
 
 	user = printAndGetUser(uid)
 	post = user.Post[0]
@@ -191,7 +199,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	fmt.Print("Added Comment on Comment")
+	fmt.Print("Added a Comment and a Like on Comment")
 	user = printAndGetUser(uid)
 	post = user.Post[0]
 	if len(post.Comment) == 0 {
@@ -260,13 +268,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	js, err := result.ToJson()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-	fmt.Printf("\n%s\n%s\n%s\n", sep, string(js), sep)
-	user = printAndGetUser(uid)
+	fmt.Print("Set censored=true on comment")
+	prettyPrintResult(*result)
 
+	user = printAndGetUser(uid)
 	post = user.Post[0]
 	if pid, err := store.Parent(post.Id); err == nil {
 		if pid != user.Id {
@@ -300,11 +305,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	js, err = result.ToJson()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-	fmt.Printf("\n%s\n%s\n%s\n", sep, string(js), sep)
+	fmt.Print("Filter out censored Comment and mark one Like as deleted.")
+	prettyPrintResult(*result)
 	// By now we have a fairly complex Post structure. CRUD for
 	// which would have been a lot of work to put together using
 	// typical SQL / NoSQL tables.
