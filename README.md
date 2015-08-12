@@ -107,3 +107,14 @@ mysql> select * from instructions;
 The writes are in constant time, where each (entity,predicate) constitutes one row. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity, it's predicates and it's children. This however, shouldn't be much of a concern for any standard data, which has limited number of predicates/properties per entity.
 
 In addition, property value filtering, sorting, full and partial text matching are now being made available via various search engines. Gocrud provides a simple search interface, which provides advanced search functionality right out of the box. Thus, there's a clear distinction between data store and search right from the beginning.
+
+## Reserved keywords
+The following predicates are reserved by the library, and shouldn't be used by the caller. Currently, this guideline isn't being hardly enforced by the library.
+
+Predicate | Meaning
+--- | ---
+`_parent_` | Stores an edge from child -> parent entity.
+`_delete_` | Marks a particular entity as deleted.
+
+## Contact
+Feel free to [contact me](https://twitter.com/manishrjain) at my Twitter handle **@manishrjain** for any discussions related to this library. Also, feel free to send pull requests, they're welcome!

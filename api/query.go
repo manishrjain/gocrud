@@ -135,6 +135,14 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 			return
 		}
 
+		if it.Predicate == "_parent_" {
+			log.WithField("id", result.Id).
+				WithField("kind", result.Kind).
+				WithField("parent", it.ObjectId).
+				Debug("Not following edge back to parent")
+			continue
+		}
+
 		if _, fout := q.filterOut[it.Predicate]; fout {
 			log.WithField("id", result.Id).
 				WithField("kind", result.Kind).

@@ -55,7 +55,8 @@ func (n *Update) SetSource(source string) *Update {
 // for e.g. Posts by Users, Comments on Posts, Likes on Posts etc.
 //
 // Retuns the Update pointer for the child entity, so any update operations
-// done on this pointer would be reflected in the child entity.
+// done on this pointer would be reflected in the child entity. Note that
+// a child can only have one parent by design.
 func (n *Update) AddChild(kind string) *Update {
 	log.WithField("childkind", kind).Debug("AddChild")
 	child := new(Update)
@@ -80,7 +81,7 @@ func (n *Update) Set(property string, value interface{}) *Update {
 }
 
 // Marks the current entity for deletion. This is equivalent to doing a
-// Set("delete", true), and then running q.FilterOut("delete") during
+// Set("delete_me", true), and then running q.FilterOut("delete_me") during
 // query phase.
 func (n *Update) MarkDeleted() *Update {
 	return n.Set("_delete_", true)
@@ -157,7 +158,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 			return errors.New("Non empty child id")
 		}
 
-		for idx := 0; ; idx++ {
+		for idx := 0; ; idx++ { // Retry loop.
 			child.id = x.UniqueString(c.NumCharsUnique)
 			log.WithField("id", child.id).Debug("Checking availability of new id")
 			if isnew := store.Get().IsNew(child.id); isnew {
@@ -178,6 +179,18 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		i.NanoTs = n.Timestamp
 		log.WithField("instruction", i).Debug("Pushing to list")
 		*its = append(*its, i)
+
+		// Create edge from child to parent
+		i = new(x.Instruction)
+		i.SubjectId = child.id
+		i.SubjectType = child.kind
+		i.Predicate = "_parent_"
+		i.ObjectId = n.id
+		i.Source = n.source
+		i.NanoTs = n.Timestamp
+		log.WithField("instruction", i).Debug("Pushing to list")
+		*its = append(*its, i)
+
 		if err := child.doExecute(c, its); err != nil {
 			return err
 		}
