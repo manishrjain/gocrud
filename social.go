@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/manishrjain/gocrud/req"
@@ -267,6 +268,21 @@ func main() {
 	user = printAndGetUser(uid)
 
 	post = user.Post[0]
+	if pid, err := store.Parent(post.Id); err == nil {
+		if pid != user.Id {
+			log.Fatal("Post's parent id doesn't match user id.")
+			return
+		}
+		log.WithFields(logrus.Fields{
+			"id":        post.Id,
+			"parent_id": pid,
+			"user_id":   user.Id,
+		}).Debug("Parent id matches")
+	} else {
+		log.Fatal(err.Error())
+		return
+	}
+
 	if len(post.Like) == 0 {
 		log.Fatalf("No like found: %+v", post)
 	}
