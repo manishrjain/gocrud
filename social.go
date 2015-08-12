@@ -58,6 +58,16 @@ type SimpleIndexer struct {
 }
 
 func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
+	// Also update the parent entity.
+	parentid, err := store.Parent(e.Id)
+	if err == nil {
+		r, rerr := store.NewQuery(parentid).Run(si.c)
+		if rerr == nil {
+			ep := x.Entity{Id: parentid, Kind: r.Kind}
+			result = append(result, ep)
+		}
+	}
+
 	result = append(result, e)
 	return
 }
@@ -67,12 +77,26 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 	rdoc.Kind = e.Kind
 	rdoc.NanoTs = time.Now().UnixNano()
 
-	result, err := store.NewQuery(e.Id).UptoDepth(0).Run(c)
-	if err != nil {
-		x.LogErr(log, err).Fatal("While querying db")
-		return rdoc
+	if e.Kind == "Post" {
+		// If Post, figure out the total activity on it, so we can sort by that.
+		result, err := store.NewQuery(e.Id).UptoDepth(1).Run(si.c)
+		if err != nil {
+			x.LogErr(log, err).Fatal("While querying db")
+			return rdoc
+		}
+		data := result.ToMap()
+		data["activity"] = len(result.Children)
+		rdoc.Data = data
+
+	} else {
+		result, err := store.NewQuery(e.Id).UptoDepth(0).Run(si.c)
+		if err != nil {
+			x.LogErr(log, err).Fatal("While querying db")
+			return rdoc
+		}
+		rdoc.Data = result.ToMap()
 	}
-	rdoc.Data = result.ToMap()
+
 	return
 }
 
@@ -312,7 +336,7 @@ func main() {
 	// typical SQL / NoSQL tables.
 
 	{
-		docs, err := search.Get().NewQuery("Post").MatchExact("data.url", "www.google.com").Run()
+		docs, err := search.Get().NewQuery("Post").MatchExact("data.url", "www.google.com").Order("-data.activity").Run()
 		if err != nil {
 			x.LogErr(log, err).Fatal("While searching for Post")
 			return
