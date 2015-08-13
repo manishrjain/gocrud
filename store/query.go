@@ -179,7 +179,10 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 				return
 			}
 
-			result.Columns[it.Predicate] = o
+			// An edge with a later timestamp would overwrite an edge
+			// with the same predicate with an earlier timestamp to
+			// show the latest version of object.
+			result.Columns[it.Predicate] = o // data loss
 			continue
 		}
 

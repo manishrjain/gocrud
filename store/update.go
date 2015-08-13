@@ -67,6 +67,8 @@ func (n *Update) AddChild(kind string) *Update {
 // Set allows you to set the property and value on the current entity.
 // This would effectively replace any other value this property had,
 // on this entity node pointer represents.
+// But, no actual data would be overwritten though, as per the retention
+// principle.
 func (n *Update) Set(property string, value interface{}) *Update {
 	log.WithField(property, value).Debug("Set")
 	if n.edges == nil {
@@ -78,7 +80,8 @@ func (n *Update) Set(property string, value interface{}) *Update {
 
 // Marks the current entity for deletion. This is equivalent to doing a
 // Set("delete_me", true), and then running q.FilterOut("delete_me") during
-// query phase.
+// query phase. Nothing is actually deleted though, as per the retention
+// principle.
 func (n *Update) MarkDeleted() *Update {
 	return n.Set("_delete_", true)
 }
@@ -146,6 +149,10 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	// Then for retrieval from parent:
 	// NewQuery(ParentKind, ParentId).Collect(ChildKind).FilterOut("deleted")
 	// This would remove all children with a 'deleted' edge.
+	// Better still
+	// Get(ChildKind, ChildId).MarkDeleted().Execute(c)
+	// would automatically filter out that child and it's children
+	// from being retrieved.
 
 	for _, child := range n.children {
 		if len(child.id) > 0 {
