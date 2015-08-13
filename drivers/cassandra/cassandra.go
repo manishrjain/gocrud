@@ -30,7 +30,7 @@ func (cs *Cassandra) SetSession(session *gocql.Session) {
 }
 
 func (cs *Cassandra) Init(args ...string) {
-	if len(args) != 3 || len(args) != 5 {
+	if len(args) != 3 && len(args) != 5 {
 		log.WithField("args", args).Fatal("Invalid arguments")
 		return
 	}
