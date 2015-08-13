@@ -12,6 +12,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/manishrjain/gocrud/indexer"
 	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
@@ -155,9 +156,11 @@ func main() {
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
 	search.Get().Init("memsearch")
-	c.Indexer = SimpleIndexer{}
-	c.RunIndexer(2)
-	defer c.WaitForIndexer()
+	indexer.Register("Post", SimpleIndexer{})
+	indexer.Register("Like", SimpleIndexer{})
+	indexer.Register("Comment", SimpleIndexer{})
+	indexer.Run(2)
+	defer indexer.WaitForDone()
 
 	log.Debug("Store initialized. Checking search...")
 	uid := newUser()

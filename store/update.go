@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/manishrjain/gocrud/indexer"
 	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -225,7 +226,7 @@ func (n *Update) Execute(c *req.Context) error {
 		return rerr
 	}
 
-	if c.Indexer != nil {
+	if indexer.Num() > 0 {
 		// This block of code figures out which entities have been modified, runs
 		// OnUpdate calls on them, to then compile a list of unique entities which
 		// need to be regenerated, and sends them off to the c.Updates channel.
@@ -236,7 +237,11 @@ func (n *Update) Execute(c *req.Context) error {
 			updates[e] = true
 		}
 		for entity := range updates {
-			dirty := c.Indexer.OnUpdate(entity)
+			idxr, pok := indexer.Get(entity.Kind)
+			if !pok {
+				continue
+			}
+			dirty := idxr.OnUpdate(entity)
 			for _, de := range dirty {
 				regens[de] = true
 			}
@@ -247,7 +252,7 @@ func (n *Update) Execute(c *req.Context) error {
 		for entity := range regens {
 			log.WithField("kind", entity.Kind).WithField("id", entity.Id).
 				Debug("Send to updates channel")
-			c.AddToQueue(entity)
+			indexer.AddToQueue(entity)
 		}
 	}
 	return nil
