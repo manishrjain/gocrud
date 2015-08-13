@@ -30,7 +30,7 @@ func (cs *Cassandra) SetSession(session *gocql.Session) {
 }
 
 func (cs *Cassandra) Init(args ...string) {
-	if len(args) != 3 {
+	if len(args) != 3 || len(args) != 5 {
 		log.WithField("args", args).Fatal("Invalid arguments")
 		return
 	}
@@ -42,6 +42,15 @@ func (cs *Cassandra) Init(args ...string) {
 	cluster := gocql.NewCluster(ipaddr)
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.Quorum
+	if len(args) == 5 {
+		log.WithField("username", args[3]).
+			Debug("Passing username and password to Cassandra")
+		cluster.Authenticator = gocql.PasswordAuthenticator{
+			Username: args[3],
+			Password: args[4],
+		}
+	}
+
 	session, err := cluster.CreateSession()
 	if err != nil {
 		x.LogErr(log, err).Fatal("While creating session")

@@ -10,6 +10,8 @@ func main() {
 	// You can use table_cassandra.cql to generate the table.
 	// Arguments: ip address, keyspace, table
 	store.Get().Init("192.168.59.103", "crudtest", "instructions")
+	// OR, if you need authentication, it can also take 5 args, like so:
+	// store.Get().Init("192.168.59.103", "crudtest", "instructions", "username", "password")
 }
 ```
 
