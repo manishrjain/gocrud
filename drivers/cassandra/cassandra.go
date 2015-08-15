@@ -23,7 +23,7 @@ type Cassandra struct {
 	session *gocql.Session
 }
 
-var kIsNew, kInsert, kSelect string
+var kIsNew, kInsert, kSelect, kScan string
 
 func (cs *Cassandra) SetSession(session *gocql.Session) {
 	cs.session = session
@@ -63,6 +63,8 @@ func (cs *Cassandra) Init(args ...string) {
 object, object_id, nano_ts, source) values (now(), ?, ?, ?, ?, ?, ?, ?)`, tablename)
 	kSelect = fmt.Sprintf(`select subject_id, subject_type, predicate, object,
 object_id, nano_ts, source from %s where subject_id = ?`, tablename)
+	kScan = fmt.Sprintf(`select subject_type, subject_id
+from %s where token(subject_id) > token(?) limit ?`, tablename)
 }
 
 func (cs *Cassandra) IsNew(subject string) bool {
@@ -105,6 +107,31 @@ func (cs *Cassandra) GetEntity(subject string) (
 		return result, err
 	}
 	return result, nil
+}
+
+func (cs *Cassandra) Iterate(fromId string, num int,
+	ch chan x.Entity) (rnum int, rerr error) {
+
+	iter := cs.session.Query(kScan, fromId, num).Iter()
+	var e x.Entity
+	handled := make(map[x.Entity]bool)
+	rnum = 0
+	for iter.Scan(&e.Kind, &e.Id) {
+		if _, present := handled[e]; present {
+			continue
+		}
+		ch <- e
+		rnum += 1
+		handled[e] = true
+		if rnum >= num {
+			break
+		}
+	}
+	if err := iter.Close(); err != nil {
+		x.LogErr(log, err).Error("While closing iterator")
+		return rnum, err
+	}
+	return rnum, nil
 }
 
 func init() {

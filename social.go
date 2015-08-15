@@ -19,11 +19,11 @@ import (
 	"github.com/manishrjain/gocrud/x"
 
 	// _ "github.com/manishrjain/gocrud/drivers/elasticsearch"
-	_ "github.com/manishrjain/gocrud/drivers/leveldb"
+	// _ "github.com/manishrjain/gocrud/drivers/leveldb"
 	_ "github.com/manishrjain/gocrud/drivers/memsearch"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
 	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
-	// _ "github.com/manishrjain/gocrud/drivers/cassandra"
+	_ "github.com/manishrjain/gocrud/drivers/cassandra"
 	// _ "github.com/manishrjain/gocrud/drivers/mongodb"
 	// _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
 )
@@ -132,6 +132,12 @@ func printAndGetUser(uid string) (user User) {
 	return user
 }
 
+func processChannel(ch chan x.Entity) {
+	for entity := range ch {
+		fmt.Println("Entity stored:", entity.Kind, entity.Id)
+	}
+}
+
 func main() {
 	rand.Seed(0) // Keep output consistent.
 	flag.Parse()
@@ -145,13 +151,13 @@ func main() {
 	c.NumCharsUnique = 10 // 62^10 permutations
 
 	// Initialize leveldb.
-	store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
+	// store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
 	// Initialize Elasticsearch.
 	// search.Get().Init("http://192.168.59.103:9200")
 
 	// Other possible initializations. Remember to import the right driver.
 	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
-	// store.Get().Init("192.168.59.103", "crudtest", "instructions")
+	store.Get().Init("192.168.59.103", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
@@ -337,6 +343,18 @@ func main() {
 	// By now we have a fairly complex Post structure. CRUD for
 	// which would have been a lot of work to put together using
 	// typical SQL / NoSQL tables.
+
+	{
+		ch := make(chan x.Entity, 10)
+		go processChannel(ch)
+		num, err := store.Get().Iterate("", 100, ch)
+		if err != nil {
+			x.LogErr(log, err).Fatal("While iterating")
+			return
+		}
+		fmt.Printf("Found %d results\n", num)
+		close(ch)
+	}
 
 	{
 		docs, err := search.Get().NewQuery("Post").MatchExact("data.url", "www.google.com").Order("-data.activity").Run()

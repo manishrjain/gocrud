@@ -27,6 +27,16 @@ type Store interface {
 	// into instructions, appends them to the array, and returns it. Any error
 	// encountered during these steps is also returned.
 	GetEntity(subject string) ([]x.Instruction, error)
+
+	// Iterate allows for a way to page over all the entities stored in the table.
+	// Iteration starts from id fromId and stops after num results are processed.
+	// Note that depending upon database, number of distinct entities might be
+	// less than the number of results retrieved from the store. That's normal.
+	//
+	// Returns the number of entities found and error, if any.
+	// If the number of entities found are zero, assume that we've reached
+	// the end of the table.
+	Iterate(fromId string, num int, ch chan x.Entity) (int, error)
 }
 
 var driver Store

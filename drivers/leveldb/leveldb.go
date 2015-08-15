@@ -125,6 +125,42 @@ func (l *Leveldb) GetEntity(id string) (result []x.Instruction, rerr error) {
 	return result, err
 }
 
+func (l *Leveldb) Iterate(fromId string, num int,
+	ch chan x.Entity) (rnum int, rerr error) {
+	slice := util.Range{Start: []byte(fromId)}
+	iter := l.db.NewIterator(&slice, nil)
+
+	rnum = 0
+	handled := make(map[x.Entity]bool)
+	for iter.Next() {
+		buf := iter.Value()
+		if buf == nil {
+			break
+		}
+		var i x.Instruction
+		if err := i.GobDecode(buf); err != nil {
+			x.LogErr(log, err).Error("While decoding")
+			return rnum, err
+		}
+		e := x.Entity{Kind: i.SubjectType, Id: i.SubjectId}
+		if _, present := handled[e]; present {
+			continue
+		}
+		ch <- e
+		handled[e] = true
+		rnum += 1
+		if rnum >= num {
+			break
+		}
+	}
+	iter.Release()
+	err := iter.Error()
+	if err != nil {
+		x.LogErr(log, err).Error("While iterating")
+	}
+	return rnum, err
+}
+
 func init() {
 	log.Info("Initing leveldb")
 	l := new(Leveldb)
