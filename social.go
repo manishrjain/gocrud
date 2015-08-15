@@ -132,10 +132,11 @@ func printAndGetUser(uid string) (user User) {
 	return user
 }
 
-func processChannel(ch chan x.Entity) {
+func processChannel(ch chan x.Entity, done chan bool) {
 	for entity := range ch {
 		fmt.Println("Entity stored:", entity.Kind, entity.Id)
 	}
+	done <- true
 }
 
 func main() {
@@ -157,7 +158,7 @@ func main() {
 
 	// Other possible initializations. Remember to import the right driver.
 	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
-	store.Get().Init("192.168.59.103", "crudtest", "instructions")
+	store.Get().Init("cassone", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
@@ -346,7 +347,8 @@ func main() {
 
 	{
 		ch := make(chan x.Entity, 10)
-		go processChannel(ch)
+		done := make(chan bool)
+		go processChannel(ch, done)
 		num, err := store.Get().Iterate("", 100, ch)
 		if err != nil {
 			x.LogErr(log, err).Fatal("While iterating")
@@ -354,6 +356,7 @@ func main() {
 		}
 		fmt.Printf("Found %d results\n", num)
 		close(ch)
+		<-done
 	}
 
 	{
