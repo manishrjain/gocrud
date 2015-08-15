@@ -15,7 +15,7 @@ go build github.com/manishrjain/gocrud
 Having built over 3 different startup backends, I think a lot of time is wasted figuring out and coding CRUD for data structures. In addition, the choice of database has to be made up front, which causes a lot of headache for startup founders. Gocrud was written with the aim to make CRUD easy, and provide the flexibility to switch out both the underlying storage and search engines at any stage of development.
 
 #### Data stores
-Datastore | Supported
+Datastore | Driver Available
 --- | :---:
 LevelDB | Yes 
 MySQL | Yes 
@@ -36,7 +36,7 @@ type Store interface {
 ```
 
 #### Search engines
-Search Engine | Supported
+Search Engine | Drive Available
 --- | :---:
 Elastic Search | Yes
 Solr | No
