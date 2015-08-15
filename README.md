@@ -75,6 +75,12 @@ And be able to traverse these relationships and retrieve all of the children, gr
 
 The library does this by utilizing Graph operations, but without using a Graph database. This means the library can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice. See [example usage](example.md)
 
+## Dependency management
+Users who import Gocrud into their packages are responsible to organize
+and maintain all of their dependencies to ensure code compatibility and build
+reproducibility. Gocrud makes no direct use of dependency management tools like
+[Godep](https://github.com/tools/godep).
+
 ## Performance considerations
 For the [example](example.md), this is what gets stored in the database:
 ```
