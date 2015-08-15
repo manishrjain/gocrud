@@ -110,9 +110,9 @@ mysql> select * from instructions;
 18 rows in set (0.00 sec)
 ```
 
-The writes are in constant time, where each (entity,predicate) constitutes one row. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity, it's predicates and it's children. This however, shouldn't be much of a concern for any standard data, which has limited number of predicates/properties per entity.
+The writes are in constant time, where each (entity,predicate) constitutes one row. As the properties per entity grow, more rows need to be read (1 row = 1 edge/predicate) to get the entity, it's predicates and it's children. This however, shouldn't be much of a concern for any standard data, which has limited number of predicates/properties per entity. Gocrud in addition, retrieves all children in parallel via `goroutines`, instead of retrieving them one by one.
 
-In addition, property value filtering, sorting, full and partial text matching are now being made available via various search engines. Gocrud provides a simple search interface, which provides advanced search functionality right out of the box. Thus, there's a clear distinction between data store and search right from the beginning.
+Property value filtering, sorting, full and partial text matching are now being made available via various search engines. Gocrud provides a search interface, which provides the most common search functionality right out of the box. Thus, there's a clear distinction between data store and search right from the beginning.
 
 ## Reserved keywords
 The following predicates are reserved by the library, and shouldn't be used by the caller. Currently, this guideline isn't being hardly enforced by the library.
