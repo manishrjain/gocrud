@@ -1,13 +1,20 @@
-package cassandra
-
+// Package cassandra contains Cassandra driver for Gocrud.
+// Testing of this package, works best via linux, unless you have
+// cassandra tools installed on your Mac.
 // To test this cassandra integration, run cassandra on docker
-// docker run -d --name cass -p 9042:9042 abh1nav/cassandra:latest
-// If on Mac, find the IP address of the docker host
-// $ boot2docker ip
-// 192.168.59.103
-// For linux it's 127.0.0.1.
-// Then, on Mac connect to it with
-// $ cqlsh 192.168.59.103 9042
+// $ docker pull poklet/cassandra
+// $ docker run --detach --name cassone poklet/cassandra
+// Now copy the contents of table_cassandra.cql to clipboard.
+// $ docker run -it --rm --net container:cassone poklet/cassandra cqlsh
+// Paste the cql instructions. This would generate the 'instructions'
+// table in a 'crudtest' keyspace.
+//
+// Cassandra driver can now be imported, and initialized in social.go,
+// or any other client.
+// import _ "github.com/manishrjain/gocrud/drivers/cassandra"
+// Initialize in main():
+// store.Get().Init("cassone", "crudtest", "instructions")
+package cassandra
 
 import (
 	"fmt"
