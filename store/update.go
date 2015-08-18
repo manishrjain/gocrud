@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/manishrjain/gocrud/indexer"
 	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -226,33 +225,17 @@ func (n *Update) Execute(c *req.Context) error {
 		return rerr
 	}
 
-	if indexer.Num() > 0 {
-		// This block of code figures out which entities have been modified, runs
-		// OnUpdate calls on them, to then compile a list of unique entities which
-		// need to be regenerated, and sends them off to the c.Updates channel.
+	if c.HasIndexer {
+		// This block of code figures out which entities have been modified,
+		// and sends them off to be updated by indexer.
 		updates := make(map[x.Entity]bool)
-		regens := make(map[x.Entity]bool)
 		for _, it := range its {
 			e := x.Entity{Kind: it.SubjectType, Id: it.SubjectId}
-			updates[e] = true
-		}
-		for entity := range updates {
-			idxr, pok := indexer.Get(entity.Kind)
-			if !pok {
+			if _, present := updates[e]; present { // find distinct entities
 				continue
 			}
-			dirty := idxr.OnUpdate(entity)
-			for _, de := range dirty {
-				regens[de] = true
-			}
-		}
-
-		log.WithField("num_updates", len(updates)).
-			WithField("num_regenerate", len(regens)).Debug("Sending for doc regeneration")
-		for entity := range regens {
-			log.WithField("kind", entity.Kind).WithField("id", entity.Id).
-				Debug("Send to updates channel")
-			indexer.AddToQueue(entity)
+			c.Updates <- e
+			updates[e] = true
 		}
 	}
 	return nil

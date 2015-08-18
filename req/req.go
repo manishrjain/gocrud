@@ -11,4 +11,22 @@ var log = x.Log("req")
 
 type Context struct {
 	NumCharsUnique int // 62^num unique strings
+	Updates        chan x.Entity
+	HasIndexer     bool
+}
+
+func NewConext(numChars int) *Context {
+	ctx := new(Context)
+	ctx.NumCharsUnique = numChars
+	ctx.HasIndexer = false
+	ctx.Updates = nil
+	return ctx
+}
+
+func NewContext(numChars, buffer int) *Context {
+	ctx := new(Context)
+	ctx.NumCharsUnique = numChars
+	ctx.Updates = make(chan x.Entity, buffer)
+	ctx.HasIndexer = true
+	return ctx
 }

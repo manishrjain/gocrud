@@ -4,6 +4,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -37,27 +38,35 @@ var (
 	wg      = new(sync.WaitGroup)
 )
 
-func processChannel() {
+func processUpdates(c *req.Context) {
 	defer wg.Done()
-	for entity := range updates {
-		indexer, present := Get(entity.Kind)
-		if !present {
+
+	for entity := range c.Updates {
+		idxr, pok := Get(entity.Kind)
+		if !pok {
 			continue
 		}
-		doc := indexer.Regenerate(entity)
-		log.WithField("doc", doc).Debug("Regenerated doc")
-		if search.Get() == nil {
-			continue
-		}
-		err := search.Get().Update(doc)
-		if err != nil {
-			x.LogErr(log, err).WithField("doc", doc).Error("While updating doc")
+		dirty := idxr.OnUpdate(entity)
+		for _, de := range dirty {
+			didxr, dok := Get(de.Kind)
+			if !dok {
+				continue
+			}
+			doc := didxr.Regenerate(de)
+			log.WithField("doc", doc).Debug("Regenerated doc")
+			if search.Get() == nil {
+				continue
+			}
+			err := search.Get().Update(doc)
+			if err != nil {
+				x.LogErr(log, err).WithField("doc", doc).Error("While updating in search engine")
+			}
 		}
 	}
 	log.Info("Finished processing channel")
 }
 
-func Run(numRoutines int) {
+func Run(c *req.Context, numRoutines int) {
 	if numRoutines <= 0 {
 		log.WithField("num_routines", numRoutines).
 			Fatal("Invalid number of goroutines for Indexer.")
@@ -66,17 +75,13 @@ func Run(numRoutines int) {
 
 	for i := 0; i < numRoutines; i++ {
 		wg.Add(1)
-		go processChannel()
+		go processUpdates(c)
 	}
 }
 
-func AddToQueue(e x.Entity) {
-	updates <- e
-}
-
-func WaitForDone() {
+func WaitForDone(c *req.Context) {
 	log.Debug("Waiting for indexer to finish.")
-	close(updates)
+	close(c.Updates)
 	wg.Wait()
 }
 

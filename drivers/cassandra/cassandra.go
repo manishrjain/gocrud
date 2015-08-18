@@ -117,13 +117,14 @@ func (cs *Cassandra) GetEntity(subject string) (
 }
 
 func (cs *Cassandra) Iterate(fromId string, num int,
-	ch chan x.Entity) (rnum int, rerr error) {
+	ch chan x.Entity) (rnum int, rlast x.Entity, rerr error) {
 
 	iter := cs.session.Query(kScan, fromId, num).Iter()
 	var e x.Entity
 	handled := make(map[x.Entity]bool)
 	rnum = 0
 	for iter.Scan(&e.Kind, &e.Id) {
+		rlast = e
 		if _, present := handled[e]; present {
 			continue
 		}
@@ -136,9 +137,9 @@ func (cs *Cassandra) Iterate(fromId string, num int,
 	}
 	if err := iter.Close(); err != nil {
 		x.LogErr(log, err).Error("While closing iterator")
-		return rnum, err
+		return rnum, rlast, err
 	}
-	return rnum, nil
+	return rnum, rlast, nil
 }
 
 func init() {

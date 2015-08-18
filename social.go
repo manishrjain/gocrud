@@ -148,8 +148,7 @@ func main() {
 		logrus.SetLevel(logrus.ErrorLevel)
 	}
 
-	c = new(req.Context)
-	c.NumCharsUnique = 10 // 62^10 permutations
+	c = req.NewContext(10, 1000) // 62^10 permutations
 
 	// Initialize leveldb.
 	// store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
@@ -166,8 +165,8 @@ func main() {
 	indexer.Register("Post", SimpleIndexer{})
 	indexer.Register("Like", SimpleIndexer{})
 	indexer.Register("Comment", SimpleIndexer{})
-	indexer.Run(2)
-	defer indexer.WaitForDone()
+	indexer.Run(c, 2)
+	defer indexer.WaitForDone(c)
 
 	log.Debug("Store initialized. Checking search...")
 	uid := newUser()
@@ -349,12 +348,13 @@ func main() {
 		ch := make(chan x.Entity, 10)
 		done := make(chan bool)
 		go processChannel(ch, done)
-		num, err := store.Get().Iterate("", 100, ch)
+		num, last, err := store.Get().Iterate("", 100, ch)
 		if err != nil {
 			x.LogErr(log, err).Fatal("While iterating")
 			return
 		}
 		fmt.Printf("Found %d results\n", num)
+		fmt.Printf("Last Entity: %+v\n", last)
 		close(ch)
 		<-done
 	}

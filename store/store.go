@@ -33,10 +33,10 @@ type Store interface {
 	// Note that depending upon database, number of distinct entities might be
 	// less than the number of results retrieved from the store. That's normal.
 	//
-	// Returns the number of entities found and error, if any.
-	// If the number of entities found are zero, assume that we've reached
-	// the end of the table.
-	Iterate(fromId string, num int, ch chan x.Entity) (int, error)
+	// Returns the number of entities found, the last entity returned
+	// and error, if any. If the number of entities found are zero, assume
+	// that we've reached the end of the table.
+	Iterate(fromId string, num int, ch chan x.Entity) (int, x.Entity, error)
 }
 
 var driver Store

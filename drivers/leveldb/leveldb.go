@@ -126,7 +126,7 @@ func (l *Leveldb) GetEntity(id string) (result []x.Instruction, rerr error) {
 }
 
 func (l *Leveldb) Iterate(fromId string, num int,
-	ch chan x.Entity) (rnum int, rerr error) {
+	ch chan x.Entity) (rnum int, rlast x.Entity, rerr error) {
 	slice := util.Range{Start: []byte(fromId)}
 	iter := l.db.NewIterator(&slice, nil)
 
@@ -140,9 +140,10 @@ func (l *Leveldb) Iterate(fromId string, num int,
 		var i x.Instruction
 		if err := i.GobDecode(buf); err != nil {
 			x.LogErr(log, err).Error("While decoding")
-			return rnum, err
+			return rnum, rlast, err
 		}
 		e := x.Entity{Kind: i.SubjectType, Id: i.SubjectId}
+		rlast = e
 		if _, present := handled[e]; present {
 			continue
 		}
@@ -158,7 +159,7 @@ func (l *Leveldb) Iterate(fromId string, num int,
 	if err != nil {
 		x.LogErr(log, err).Error("While iterating")
 	}
-	return rnum, err
+	return rnum, rlast, err
 }
 
 func init() {
