@@ -15,16 +15,16 @@ go build github.com/manishrjain/gocrud
 Having built over 3 different startup backends, I think a lot of time is wasted figuring out and coding CRUD for data structures. In addition, the choice of database has to be made up front, which causes a lot of headache for startup founders. Gocrud was written with the aim to make CRUD easy, and provide the flexibility to switch out both the underlying storage and search engines at any stage of development.
 
 #### Data stores
-Datastore | Driver Available
---- | :---:
-LevelDB | Yes 
-MySQL | Yes 
-PostgreSQL | Yes
-Cassandra | Yes
-MongoDB | Yes
-Google Datastore | Yes
-RethinkDB | Yes
-Amazon DynamoDB | No
+Datastore | Driver Available | Status
+--- | :---: | ---
+LevelDB | Yes | Ready
+MySQL | Yes | Needs to implement `Iterate` func
+PostgreSQL | Yes | Needs to implement `Iterate` func
+Cassandra | Yes | Ready
+MongoDB | Yes | Needs to implement `Iterate` func
+Google Datastore | Yes | Needs to implement `Iterate` func
+RethinkDB | Yes | Needs to implement `Iterate` func
+Amazon DynamoDB | No | Needs work
 **[Datastore usage](datastore.md)** shows how to use and initialize various datastores. One can add support for more by implementing this interface:
 ```go
 type Store interface {
@@ -32,6 +32,7 @@ type Store interface {
   Commit(its []*x.Instruction) error
   IsNew(subject string) bool
   GetEntity(subject string) ([]x.Instruction, error)
+  Iterate(fromId string, num int, ch chan x.Entity) (int, error)
 }
 ```
 
