@@ -90,6 +90,11 @@ func (mdb *MongoDB) GetEntity(subject string) (result []x.Instruction, err error
 	return result, err
 }
 
+func (mdb *MongoDB) Iterate(fromId string, num int, ch chan x.Entity) (found int, last x.Entity, err error) {
+	log.Fatal("Not implemented")
+	return
+}
+
 func init() {
 	log.Info("Registering mongodb")
 	store.Register("mongodb", new(MongoDB))

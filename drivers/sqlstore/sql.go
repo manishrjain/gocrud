@@ -130,6 +130,11 @@ func (s *Sql) GetEntity(subject string) (
 	return result, nil
 }
 
+func (s *Sql) Iterate(fromId string, num int, ch chan x.Entity) (found int, last x.Entity, err error) {
+	log.Fatal("Not implemented")
+	return
+}
+
 func init() {
 	log.Info("Initing sqlstore")
 	store.Register("sqlstore", new(Sql))

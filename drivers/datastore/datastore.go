@@ -102,6 +102,11 @@ func (ds *Datastore) GetEntity(subject string) (reply []x.Instruction, rerr erro
 	return
 }
 
+func (ds *Datastore) Iterate(fromId string, num int, ch chan x.Entity) (found int, last x.Entity, err error) {
+	log.Fatal("Not implemented")
+	return
+}
+
 func init() {
 	log.Info("Initing datastore")
 	store.Register("datastore", new(Datastore))
