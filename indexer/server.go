@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	"sync"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -13,6 +14,7 @@ import (
 // and index entities to keep store and search in-sync.
 type Server struct {
 	ch chan x.Entity
+	wg *sync.WaitGroup
 }
 
 // NewServer returns back a server which runs continously in
@@ -26,13 +28,17 @@ func NewServer(buffer int, numRoutines int) *Server {
 	}
 	s := new(Server)
 	s.ch = make(chan x.Entity, buffer)
+	s.wg = new(sync.WaitGroup)
 	for i := 0; i < numRoutines; i++ {
+		s.wg.Add(1)
 		go s.regenerateAndIndex()
 	}
 	return s
 }
 
 func (s *Server) regenerateAndIndex() {
+	defer s.wg.Done()
+
 	for entity := range s.ch {
 		idxr, ok := Get(entity.Kind)
 		if !ok {
@@ -48,7 +54,8 @@ func (s *Server) regenerateAndIndex() {
 	}
 }
 
-func (s *Server) cycleOnce() {
+// LoopOnce would cycle over all entities in the store, and re-index them.
+func (s *Server) LoopOnce() {
 	var total uint64
 	from := ""
 	for {
@@ -76,8 +83,13 @@ func (s *Server) cycleOnce() {
 // store, waiting for wait duration after each cycle.
 func (s *Server) InfiniteLoop(wait time.Duration) {
 	for {
-		s.cycleOnce()
+		s.LoopOnce()
 		log.Debug("Sleeping...")
 		time.Sleep(wait)
 	}
+}
+
+func (s *Server) Finish() {
+	close(s.ch)
+	s.wg.Wait()
 }

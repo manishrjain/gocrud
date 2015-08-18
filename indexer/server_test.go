@@ -34,4 +34,8 @@ func ExampleServer() {
 	server := indexer.NewServer(100, 5)
 	server.InfiniteLoop(30 * time.Minute)
 	// This would never exit.
+	// OR, you could also just run this once, if you're
+	// testing your setup.
+	server.LoopOnce()
+	server.Finish() // Finish is only useful when you're looping once.
 }

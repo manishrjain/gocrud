@@ -59,7 +59,8 @@ func processUpdates(c *req.Context) {
 			}
 			err := search.Get().Update(doc)
 			if err != nil {
-				x.LogErr(log, err).WithField("doc", doc).Error("While updating in search engine")
+				x.LogErr(log, err).WithField("doc", doc).
+					Error("While updating in search engine")
 			}
 		}
 	}
