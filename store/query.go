@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/manishrjain/gocrud/req"
 	"github.com/manishrjain/gocrud/x"
 )
 
@@ -115,7 +114,7 @@ func (q *Query) root() *Query {
 	return q
 }
 
-func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
+func (q *Query) doRun(level, max int, ch chan runResult) {
 	log.Debugf("Query: %+v", q)
 	its, err := Get().GetEntity(q.id)
 	if err != nil {
@@ -195,7 +194,7 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 			waitTimes += 1
 			log.WithField("child_id", nchildq.id).
 				WithField("child_kind", nchildq.kind).Debug("Go routine for child")
-			go nchildq.doRun(c, 0, nchildq.maxDepth, childChan)
+			go nchildq.doRun(0, nchildq.maxDepth, childChan)
 			continue
 		}
 
@@ -206,7 +205,7 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 			waitTimes += 1
 			log.WithField("child_id", child.id).WithField("level", level+1).
 				Debug("Go routine for child one level deeper")
-			go child.doRun(c, level+1, max, childChan)
+			go child.doRun(level+1, max, childChan)
 		}
 	}
 
@@ -232,11 +231,11 @@ func (q *Query) doRun(c *req.Context, level, max int, ch chan runResult) {
 // Run finds the root from the given Query pointer, recursively executes
 // the read operations, and returns back pointer to Result object.
 // Any errors encountered during these stpeps is returned as well.
-func (q *Query) Run(c *req.Context) (result *Result, rerr error) {
+func (q *Query) Run() (result *Result, rerr error) {
 	q = q.root()
 
 	ch := make(chan runResult)
-	go q.doRun(c, 0, q.maxDepth, ch)
+	go q.doRun(0, q.maxDepth, ch)
 	rr := <-ch // Blocking wait
 	return rr.Result, rr.Err
 }

@@ -55,14 +55,13 @@ type User struct {
 }
 
 type SimpleIndexer struct {
-	c *req.Context
 }
 
 func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
 	// Also update the parent entity.
 	parentid, err := store.Parent(e.Id)
 	if err == nil {
-		r, rerr := store.NewQuery(parentid).Run(si.c)
+		r, rerr := store.NewQuery(parentid).Run()
 		if rerr == nil {
 			ep := x.Entity{Id: parentid, Kind: r.Kind}
 			result = append(result, ep)
@@ -80,7 +79,7 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 
 	if e.Kind == "Post" {
 		// If Post, figure out the total activity on it, so we can sort by that.
-		result, err := store.NewQuery(e.Id).UptoDepth(1).Run(si.c)
+		result, err := store.NewQuery(e.Id).UptoDepth(1).Run()
 		if err != nil {
 			x.LogErr(log, err).Fatal("While querying db")
 			return rdoc
@@ -90,7 +89,7 @@ func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
 		rdoc.Data = data
 
 	} else {
-		result, err := store.NewQuery(e.Id).UptoDepth(0).Run(si.c)
+		result, err := store.NewQuery(e.Id).UptoDepth(0).Run()
 		if err != nil {
 			x.LogErr(log, err).Fatal("While querying db")
 			return rdoc
@@ -119,7 +118,7 @@ func prettyPrintResult(result store.Result) {
 }
 
 func printAndGetUser(uid string) (user User) {
-	result, err := store.NewQuery(uid).UptoDepth(10).Run(c)
+	result, err := store.NewQuery(uid).UptoDepth(10).Run()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -297,7 +296,7 @@ func main() {
 		log.Fatalf("Error: %v", err)
 	}
 	q := store.NewQuery(comment.Id).UptoDepth(0)
-	result, err := q.Run(c)
+	result, err := q.Run()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -334,7 +333,7 @@ func main() {
 	q = store.NewQuery(uid).Collect("Post")
 	q.Collect("Like").UptoDepth(10)
 	q.Collect("Comment").UptoDepth(10).FilterOut("censored")
-	result, err = q.Run(c)
+	result, err = q.Run()
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
