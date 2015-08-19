@@ -15,7 +15,7 @@ type Context struct {
 	HasIndexer     bool
 }
 
-func NewConext(numChars int) *Context {
+func NewContext(numChars int) *Context {
 	ctx := new(Context)
 	ctx.NumCharsUnique = numChars
 	ctx.HasIndexer = false
@@ -23,7 +23,7 @@ func NewConext(numChars int) *Context {
 	return ctx
 }
 
-func NewContext(numChars, buffer int) *Context {
+func NewContextWithUpdates(numChars, buffer int) *Context {
 	ctx := new(Context)
 	ctx.NumCharsUnique = numChars
 	ctx.Updates = make(chan x.Entity, buffer)

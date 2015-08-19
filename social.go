@@ -147,7 +147,7 @@ func main() {
 		logrus.SetLevel(logrus.ErrorLevel)
 	}
 
-	c = req.NewContext(10, 1000) // 62^10 permutations
+	c = req.NewContextWithUpdates(10, 1000) // 62^10 permutations
 
 	// Initialize leveldb.
 	// store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
