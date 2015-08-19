@@ -3,7 +3,6 @@ package usage_test
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"time"
 
 	_ "github.com/manishrjain/gocrud/drivers/leveldb"
@@ -18,7 +17,6 @@ import (
 var log = x.Log("usage")
 
 func ExampleStore() {
-	rand.Seed(0) // For determinism.
 	path, err := ioutil.TempDir("", "gocrudldb_")
 	if err != nil {
 		x.LogErr(log, err).Fatal("Opening file")
@@ -97,14 +95,13 @@ var particles = [...]string{
 }
 
 func ExampleSearch() {
-	rand.Seed(0) // For determinism.
 	path, err := ioutil.TempDir("", "gocrudldb_")
 	if err != nil {
 		x.LogErr(log, err).Fatal("Opening file")
 		return
 	}
 	store.Get().Init(path) // leveldb
-	search.Get().Init()
+	search.Get().Init()    // memsearch
 
 	// Run indexer to update entities in search engine in real time.
 	c := req.NewContextWithUpdates(10, 100)

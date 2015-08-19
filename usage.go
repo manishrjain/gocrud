@@ -1,3 +1,4 @@
+// Usage is a dummy package to showcase how to use gocrud with various examples.
 package usage
 
 import (
@@ -7,3 +8,11 @@ import (
 	_ "github.com/manishrjain/gocrud/store"
 	_ "github.com/manishrjain/gocrud/x"
 )
+
+func Store() {
+	// Nothing to see here.
+}
+
+func Search() {
+	// Nothing to see here.
+}
