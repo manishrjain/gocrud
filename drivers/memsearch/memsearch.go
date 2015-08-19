@@ -2,6 +2,7 @@ package memsearch
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -123,14 +124,16 @@ func (d Docs) Less(i, j int) bool {
 	switch t := vi.(type) {
 	case string:
 		return vi.(string) < vj.(string)
-	case int64:
+	case int64, int32, int:
 		return vi.(int64) < vj.(int64)
+	case float64:
+		return vi.(float64) < vj.(float64)
 	default:
 		log.WithFields(logrus.Fields{
 			"vi":         vi,
 			"vj":         vj,
 			"field":      d.field,
-			"type_found": t,
+			"type_found": fmt.Sprintf("%T", t),
 		}).Fatal("Invalid type")
 	}
 
@@ -138,12 +141,30 @@ func (d Docs) Less(i, j int) bool {
 }
 
 func (mq *MemQuery) Order(field string) search.Query {
+	reverse := false
+	if strings.HasPrefix(field, "-") {
+		reverse = true
+		field = field[1:]
+	}
 	if len(field) > len("data.") && strings.ToLower(field[0:5]) == "data." {
 		field = field[5:]
 	}
 
+	eligible := mq.Docs[:0]
+	for _, doc := range mq.Docs {
+		fi := doc.Data.(map[string]interface{})
+		if _, pi := fi[field]; pi {
+			eligible = append(eligible, doc)
+		}
+	}
+	mq.Docs = eligible
+
 	docs := Docs{data: mq.Docs, field: field}
-	sort.Sort(docs)
+	if reverse {
+		sort.Sort(sort.Reverse(docs))
+	} else {
+		sort.Sort(docs)
+	}
 	return mq
 }
 

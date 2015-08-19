@@ -1,12 +1,16 @@
-package main_test
+package usage_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"time"
 
 	_ "github.com/manishrjain/gocrud/drivers/leveldb"
+	_ "github.com/manishrjain/gocrud/drivers/memsearch"
+	"github.com/manishrjain/gocrud/indexer"
 	"github.com/manishrjain/gocrud/req"
+	"github.com/manishrjain/gocrud/search"
 	"github.com/manishrjain/gocrud/store"
 	"github.com/manishrjain/gocrud/x"
 )
@@ -62,4 +66,85 @@ func ExampleStore() {
 	// bigbang
 	// true
 	// 13.8 billion years ago
+}
+
+type SimpleIndexer struct {
+}
+
+func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
+	result = append(result, e)
+	return
+}
+
+func (si SimpleIndexer) Regenerate(e x.Entity) (rdoc x.Doc) {
+	rdoc.Id = e.Id
+	rdoc.Kind = e.Kind
+	rdoc.NanoTs = time.Now().UnixNano()
+
+	result, err := store.NewQuery(e.Id).Run()
+	if err != nil {
+		x.LogErr(log, err).Fatal("While querying store")
+		return
+	}
+	data := result.ToMap()
+	rdoc.Data = data
+	return
+}
+
+var particles = [...]string{
+	"up", "charm", "top", "gluon", "down", "strange",
+	"bottom", "photon", "boson", "higgs boson",
+}
+
+func ExampleSearch() {
+	rand.Seed(0) // For determinism.
+	path, err := ioutil.TempDir("", "gocrudldb_")
+	if err != nil {
+		x.LogErr(log, err).Fatal("Opening file")
+		return
+	}
+	store.Get().Init(path) // leveldb
+	search.Get().Init()
+
+	// Run indexer to update entities in search engine in real time.
+	c := req.NewContextWithUpdates(10, 100)
+	indexer.Register("Child", SimpleIndexer{})
+	indexer.Run(c, 2)
+
+	u := store.NewUpdate("Root", "bigbang").SetSource("author")
+	for i := 0; i < 10; i++ {
+		child := u.AddChild("Child").Set("pos", i).Set("particle", particles[i])
+		if i == 5 {
+			child.MarkDeleted() // This shouldn't be retrieved anymore.
+		}
+	}
+	if err = u.Execute(c); err != nil {
+		x.LogErr(log, err).Fatal("While updating")
+		return
+	}
+
+	indexer.WaitForDone(c) // Block until indexing is done.
+
+	docs, err := search.Get().NewQuery("Child").Order("-data.pos").Run()
+	if err != nil {
+		x.LogErr(log, err).Fatal("While searching")
+		return
+	}
+	fmt.Println("docs:", len(docs))
+	for _, doc := range docs {
+		m := doc.Data.(map[string]interface{})
+		fmt.Println(m["pos"], m["particle"])
+	}
+
+	// Output:
+	// docs: 9
+	// 9 higgs boson
+	// 8 boson
+	// 7 photon
+	// 6 bottom
+	// 4 down
+	// 3 gluon
+	// 2 top
+	// 1 charm
+	// 0 up
 }
