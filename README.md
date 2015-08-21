@@ -6,6 +6,7 @@ Go library to simplify creating, updating and deleting arbitrary depth structure
  * [Example Usage](example.md)
 
 [![wercker status](https://app.wercker.com/status/08406d64ea74cab2dd8155944e56b87d/m "wercker status")](https://app.wercker.com/project/bykey/08406d64ea74cab2dd8155944e56b87d)
+[![GoDoc](https://godoc.org/github.com/manishrjain/gocrud?status.svg)](https://godoc.org/github.com/manishrjain/gocrud)
 
 ## Build and Run
 ```bash
