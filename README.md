@@ -1,5 +1,5 @@
 # gocrud
-Go library to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
+Go framework to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
  * [Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
  * [Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
@@ -8,13 +8,17 @@ Go library to simplify creating, updating and deleting arbitrary depth structure
 [![wercker status](https://app.wercker.com/status/08406d64ea74cab2dd8155944e56b87d/m "wercker status")](https://app.wercker.com/project/bykey/08406d64ea74cab2dd8155944e56b87d)
 [![GoDoc](https://godoc.org/github.com/manishrjain/gocrud?status.svg)](https://godoc.org/github.com/manishrjain/gocrud)
 
-## Build and Run
+## Install
 ```bash
-go build github.com/manishrjain/gocrud
-./gocrud  # By default, uses leveldb as a datastore, and memsearch as search engine.
+go get -v github.com/manishrjain/gocrud
+# Look at usage examples to see how it works.
 ```
 
 ## Why?
+![](allthings.jpg)
+
+<sub>Courtesy: Monish, co-founder karma.wiki</sub>
+
 Having built over 3 different startup backends, I think a lot of time is wasted figuring out and coding CRUD for data structures. In addition, the choice of database has to be made up front, which causes a lot of headache for startup founders. Gocrud was written with the aim to make CRUD easy, and provide the flexibility to switch out both the underlying storage and search engines at any stage of development.
 
 #### Data stores
