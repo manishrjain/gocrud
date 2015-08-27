@@ -82,6 +82,32 @@ func (mq *MemQuery) MatchExact(field string, value interface{}) search.Query {
 	return mq
 }
 
+func (mq *MemQuery) MatchPartial(field string, value string) search.Query {
+	if len(field) > len("data.") && strings.ToLower(field[0:5]) == "data." {
+		field = field[5:]
+	}
+	filtered := mq.Docs[:0]
+
+	for _, doc := range mq.Docs {
+		fields := doc.Data.(map[string]interface{})
+		if val, present := fields[field]; present {
+			vals := val.(string)
+			if strings.Contains(vals, value) {
+				log.WithFields(logrus.Fields{
+					"field": field,
+					"doc":   doc.Id,
+					"value": val,
+				}).Debug("Partial match")
+				filtered = append(filtered, doc)
+				continue
+			}
+		}
+	}
+	mq.Docs = filtered
+	log.WithField("field", field).Debug("Done Matching")
+	return mq
+}
+
 func (mq *MemQuery) Limit(num int) search.Query {
 	if len(mq.Docs) > num {
 		mq.Docs = mq.Docs[0:num]
