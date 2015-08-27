@@ -18,15 +18,15 @@ type Store interface {
 	// Commit writes the array of instructions to the data store.
 	Commit(its []*x.Instruction) error
 
-	// IsNew returns true if the subject id provided doesn't exist in the
-	// store. Note that this subject id is never solely the row primary key,
-	// because multiple rows can (and most surely will) have the same subject id.
-	IsNew(subject string) bool
+	// IsNew returns true if the entity id provided doesn't exist in the
+	// store. Note that this entity id is never solely the row primary key,
+	// because multiple rows can (and most surely will) have the same entity id.
+	IsNew(entityId string) bool
 
 	// GetEntity retrieves all the rows for the given subject id, parses them
 	// into instructions, appends them to the array, and returns it. Any error
 	// encountered during these steps is also returned.
-	GetEntity(subject string) ([]x.Instruction, error)
+	GetEntity(entityId string) ([]x.Instruction, error)
 
 	// Iterate allows for a way to page over all the entities stored in the table.
 	// Iteration starts from id fromId and stops after num results are processed.

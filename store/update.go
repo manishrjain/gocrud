@@ -108,6 +108,10 @@ func (n *Update) Print() *Update {
 	return n
 }
 
+func (n *Update) Id() string {
+	return n.id
+}
+
 func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	for pred, val := range n.edges {
 		if len(n.source) == 0 {
