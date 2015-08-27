@@ -23,6 +23,10 @@ type Query interface {
 	// term matching by some engines.
 	MatchExact(field string, value interface{}) Query
 
+	// MatchPartial would do wild card matching. Requires value to be string,
+	// typically in the format: [sear*], or [*arch], or [*arc*].
+	MatchPartial(field string, value string) Query
+
 	// Limit would limit the number of results to num.
 	Limit(num int) Query
 

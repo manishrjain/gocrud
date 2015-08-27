@@ -101,6 +101,14 @@ func (eq *ElasticQuery) MatchExact(field string,
 	return eq
 }
 
+// MatchPartial implemented by ElasticSearch uses the 'wildcard' directive.
+func (eq *ElasticQuery) MatchPartial(field string,
+	value string) search.Query {
+	wq := elastic.NewWildcardQuery(field, value)
+	eq.ss = eq.ss.Query(&wq)
+	return eq
+}
+
 // Order sorts the results for the given field.
 func (eq *ElasticQuery) Order(field string) search.Query {
 	if field[:1] == "-" {
