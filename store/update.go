@@ -14,13 +14,13 @@ import (
 // Update stores the create and update instructions, acting as the modifier
 // to the entity Update relates to.
 type Update struct {
-	kind      string
-	id        string
-	source    string
-	children  []*Update
-	parent    *Update
-	edges     map[string]interface{}
-	Timestamp int64
+	kind     string
+	id       string
+	source   string
+	children []*Update
+	parent   *Update
+	edges    map[string]interface{}
+	NanoTs   int64
 }
 
 // NewUpdate is the main entrypoint to updates. Returns back a Update
@@ -34,7 +34,7 @@ func NewUpdate(kind, id string) *Update {
 	n := new(Update)
 	n.kind = kind
 	n.id = id
-	n.Timestamp = time.Now().UnixNano()
+	n.NanoTs = time.Now().UnixNano()
 	return n
 }
 
@@ -58,7 +58,7 @@ func (n *Update) AddChild(kind string) *Update {
 	child := new(Update)
 	child.parent = n
 	child.kind = kind
-	child.Timestamp = n.Timestamp
+	child.NanoTs = n.NanoTs
 	child.source = n.source
 	n.children = append(n.children, child)
 	return child
@@ -112,6 +112,25 @@ func (n *Update) Id() string {
 	return n.id
 }
 
+func (n *Update) setCommitTs(tsNano int64) {
+	n.NanoTs = tsNano
+	for _, child := range n.children {
+		child.setCommitTs(tsNano)
+	}
+}
+
+// SetCommitTs allows you to set the commit timestamp of the update.
+// The timestamp provided should be in nano-seconds. SetCommitTs
+// can only be called on the root update node.
+func (n *Update) SetCommitTs(tsNano int64) *Update {
+	if n.parent != nil {
+		log.Error("SetCommitTs called on a child node. Ignoring...")
+		return n
+	}
+	n.setCommitTs(tsNano)
+	return n
+}
+
 func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 	for pred, val := range n.edges {
 		if len(n.source) == 0 {
@@ -130,7 +149,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 			i.Object = b
 		}
 		i.Source = n.source
-		i.NanoTs = n.Timestamp
+		i.NanoTs = n.NanoTs
 		log.WithField("instruction", i).Debug("Pushing to list")
 		*its = append(*its, i)
 	}
@@ -183,7 +202,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		i.Predicate = child.kind
 		i.ObjectId = child.id
 		i.Source = n.source
-		i.NanoTs = n.Timestamp
+		i.NanoTs = n.NanoTs
 		log.WithField("instruction", i).Debug("Pushing to list")
 		*its = append(*its, i)
 
@@ -194,7 +213,7 @@ func (n *Update) doExecute(c *req.Context, its *[]*x.Instruction) error {
 		i.Predicate = "_parent_"
 		i.ObjectId = n.id
 		i.Source = n.source
-		i.NanoTs = n.Timestamp
+		i.NanoTs = n.NanoTs
 		log.WithField("instruction", i).Debug("Pushing to list")
 		*its = append(*its, i)
 
