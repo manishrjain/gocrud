@@ -240,6 +240,10 @@ func (q *Query) Run() (result *Result, rerr error) {
 	return rr.Result, rr.Err
 }
 
+func (r *Result) Drop(pred string) {
+	delete(r.Columns, pred)
+}
+
 func (r *Result) Debug(level int) {
 	log.Debugf("Result level %v: %+v", level, r)
 	for _, child := range r.Children {
