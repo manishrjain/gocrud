@@ -1,8 +1,7 @@
 # gocrud
-Go framework to simplify creating, updating and deleting arbitrary depth structured data — to make building REST services fast and easy.
+Go framework to simplify creating, reading, updating, and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
- * [Link to blog post](http://hacks.ghost.io/go-library-for-crud/)
- * [Link to Go Docs](http://godoc.org/github.com/manishrjain/gocrud)
+ * [Link to blog posts](https://mrjn.xyz/categories/gocrud/)
  * [Example Usage](example.md)
 
 [![wercker status](https://app.wercker.com/status/08406d64ea74cab2dd8155944e56b87d/m "wercker status")](https://app.wercker.com/project/bykey/08406d64ea74cab2dd8155944e56b87d)
@@ -65,14 +64,14 @@ type Query interface {
 }
 ```
 
-## Library
-This library is built to follow these principles:
+## Framework
+This framework is built to follow these principles:
 
 1. **Versioning**: Keep track of all edits to the data, including deletion operations.
 1. **Authorship**: Be able to track who edited (/deleted) what.
 1. **Retention**: On deletion, only mark it as deleted. Never actually delete any data.
 
-The library makes it easy to have *Parent-Child* relationships, quite common in today’s CRUD operations. For e.g.
+The framework makes it easy to have *Parent-Child* relationships, quite common in today’s CRUD operations. For e.g.
 ```
 - Posts created by User (User -> Post)
 - Comments on Posts (Post -> Comment)
@@ -81,7 +80,7 @@ The library makes it easy to have *Parent-Child* relationships, quite common in 
 ```
 And be able to traverse these relationships and retrieve all of the children, grandchildren etc. For e.g. `(User -> Post -> [(Comment -> Like), Like])`
 
-The library does this by utilizing Graph operations, but without using a Graph database. This means the library can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice. See [example usage](example.md)
+The framework does this by utilizing Graph operations, but without using a Graph database. This means the framework can be used to quickly build a Go backend to serve arbitrarily complex data, while still using your database of choice. See [example usage](example.md)
 
 ## Dependency management
 Users who import Gocrud into their packages are responsible to organize
@@ -123,7 +122,7 @@ The writes are in constant time, where each (entity,predicate) constitutes one r
 Property value filtering, sorting, full and partial text matching are now being made available via various search engines. Gocrud provides a search interface, which provides the most common search functionality right out of the box. Thus, there's a clear distinction between data store and search right from the beginning.
 
 ## Reserved keywords
-The following predicates are reserved by the library, and shouldn't be used by the caller. Currently, this guideline isn't being hardly enforced by the library.
+The following predicates are reserved by the framework, and shouldn't be used by the caller. Currently, this guideline isn't being hardly enforced by the framework.
 
 Predicate | Meaning
 --- | ---
@@ -131,4 +130,4 @@ Predicate | Meaning
 `_delete_` | Marks a particular entity as deleted.
 
 ## Contact
-Feel free to [contact me](https://twitter.com/manishrjain) at my Twitter handle **@manishrjain** for any discussions related to this library. Also, feel free to send pull requests, they're welcome!
+Feel free to [contact me](https://twitter.com/manishrjain) at my Twitter handle **@manishrjain** for any discussions related to this framework. Also, feel free to send pull requests, they're welcome!
