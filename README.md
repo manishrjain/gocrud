@@ -17,6 +17,7 @@ go get -v github.com/manishrjain/gocrud
 I hang out at the gophers.slack.com, at `#gocrud` channel.
 You can get an invitation to join Slack via this link:
 [Gopher Slack Signup](http://bit.ly/go-slack-signup)
+You can also direct message me, my user id is `@manishrjain`.
 
 ## Why?
 ![](allthings.jpg)
