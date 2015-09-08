@@ -13,6 +13,11 @@ go get -v github.com/manishrjain/gocrud
 # Look at usage examples to see how it works.
 ```
 
+## Questions / Support
+I hang out at the gophers.slack.com, at `#gocrud` channel.
+You can get an invitation to join Slack via this link:
+[Gopher Slack Signup](http://bit.ly/go-slack-signup)
+
 ## Why?
 ![](allthings.jpg)
 
