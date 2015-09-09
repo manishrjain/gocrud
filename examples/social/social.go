@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -19,11 +21,11 @@ import (
 	"github.com/manishrjain/gocrud/x"
 
 	// _ "github.com/manishrjain/gocrud/drivers/elasticsearch"
-	// _ "github.com/manishrjain/gocrud/drivers/leveldb"
+	_ "github.com/manishrjain/gocrud/drivers/leveldb"
 	_ "github.com/manishrjain/gocrud/drivers/memsearch"
 	// _ "github.com/manishrjain/gocrud/drivers/datastore"
 	// _ "github.com/manishrjain/gocrud/drivers/sqlstore"
-	_ "github.com/manishrjain/gocrud/drivers/cassandra"
+	// _ "github.com/manishrjain/gocrud/drivers/cassandra"
 	// _ "github.com/manishrjain/gocrud/drivers/mongodb"
 	// _ "github.com/manishrjain/gocrud/drivers/rethinkdb"
 )
@@ -150,13 +152,20 @@ func main() {
 	c = req.NewContextWithUpdates(10, 1000) // 62^10 permutations
 
 	// Initialize leveldb.
-	// store.Get().Init("/tmp/ldb_" + x.UniqueString(10))
+	dirname, err := ioutil.TempDir("", "ldb_")
+	if err != nil {
+		log.Fatalf("While creating temp directory: %v\n", err)
+		return
+	}
+	defer os.RemoveAll(dirname)
+	store.Get().Init(dirname)
+
 	// Initialize Elasticsearch.
 	// search.Get().Init("http://192.168.59.103:9200")
 
 	// Other possible initializations. Remember to import the right driver.
 	// store.Get().Init("mysql", "root@tcp(127.0.0.1:3306)/test", "instructions")
-	store.Get().Init("cassone", "crudtest", "instructions")
+	// store.Get().Init("cassone", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:27017", "crudtest", "instructions")
 	// store.Get().Init("192.168.59.103:28015", "test", "instructions")
 
@@ -169,7 +178,6 @@ func main() {
 
 	log.Debug("Store initialized. Checking search...")
 	uid := newUser()
-	var err error
 
 	// Let's get started. User 'uid' creates a new Post.
 	// This Post shares a url, adds some text and some tags.
@@ -359,13 +367,24 @@ func main() {
 	}
 
 	{
-		docs, err := search.Get().NewQuery("Post").MatchExact("data.url", "www.google.com").Order("-data.activity").Run()
+		fmt.Println()
+		fmt.Println()
+		fmt.Print("Searching for doc with url = www.google.com")
+		q := search.Get().NewQuery("Post").Order("-data.activity")
+		q.NewAndFilter().AddExact("data.url", "www.google.com")
+		docs, err := q.Run()
 		if err != nil {
 			x.LogErr(log, err).Fatal("While searching for Post")
 			return
 		}
 		for _, doc := range docs {
-			log.WithField("doc", doc).Debug("Resulting doc")
+			js, err := json.MarshalIndent(doc, "", "'  ")
+			if err != nil {
+				log.Fatalf("While marshal: %v\n", err)
+				return
+			}
+			fmt.Printf("\n%s\n%s\n%s\n\n", sep1, string(js), sep2)
+			// log.WithField("doc", doc).Debug("Resulting doc")
 		}
 		log.Debug("Search query over")
 	}

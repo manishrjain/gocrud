@@ -19,13 +19,13 @@ var log = x.Log("search")
 // Query interface provides the search api encapsulator, responsible for
 // generating the right query for the engine, and then running it.
 type Query interface {
-	// MatchExact would do exact full string, int, etc. matching. Also called
-	// term matching by some engines.
-	MatchExact(field string, value interface{}) Query
+	// NewAndFilter would return a filter which would run AND operation
+	// among individual filter queries.
+	NewAndFilter() FilterQuery
 
-	// MatchPartial would do wild card matching. Requires value to be string,
-	// typically in the format: [sear*], or [*arch], or [*arc*].
-	MatchPartial(field string, value string) Query
+	// NewOrFilter would return a filter which would run OR operation
+	// among individual filter queries.
+	NewOrFilter() FilterQuery
 
 	// Limit would limit the number of results to num.
 	Limit(num int) Query
@@ -36,6 +36,16 @@ type Query interface {
 
 	// Run the generated query, providing resulting documents and error, if any.
 	Run() ([]x.Doc, error)
+}
+
+type FilterQuery interface {
+	// AddExact would do exact full string, int, etc. filtering. Also called
+	// term filtering by some engines.
+	AddExact(field string, value interface{}) FilterQuery
+
+	// AddRegex would do regular expression filtering.
+	// Naturally, requires value to be string.
+	AddRegex(field string, value string) FilterQuery
 }
 
 // Engine provides the interface to be implemented to support search engines.

@@ -19,7 +19,13 @@ type Elastic struct {
 
 // ElasticQuery implements methods declared by search.Query.
 type ElasticQuery struct {
-	ss *elastic.SearchService
+	ss         *elastic.SearchService
+	filter     *ElasticFilter
+	filterType int // 0 = no filter, 1 = AND, 2 = OR
+}
+
+type ElasticFilter struct {
+	filters []elastic.Filter
 }
 
 // Init initializes connection to Elastic Search instance, checks for
@@ -88,25 +94,41 @@ func (es *Elastic) Update(doc x.Doc) error {
 	return nil
 }
 
-// MatchExact implemented by ElasticSearch uses the 'term' directive.
+func (eq *ElasticQuery) NewAndFilter() search.FilterQuery {
+	eq.filter = new(ElasticFilter)
+	eq.filterType = 1
+
+	return eq.filter
+}
+
+func (eq *ElasticQuery) NewOrFilter() search.FilterQuery {
+	eq.filter = new(ElasticFilter)
+	eq.filterType = 2
+
+	return eq.filter
+}
+
+// AddExact implemented by ElasticSearch uses the 'term' directive.
 // Note that with strings, this might not return exact match results,
 // if the index is set to pre-process strings, which it does by default.
 // In other words, for string term-exact matches to work, you need to
 // set the mapping to "index": "not_analyzed".
 // https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
-func (eq *ElasticQuery) MatchExact(field string,
-	value interface{}) search.Query {
-	tq := elastic.NewTermQuery(field, value)
-	eq.ss = eq.ss.Query(&tq)
-	return eq
+func (ef *ElasticFilter) AddExact(field string,
+	value interface{}) search.FilterQuery {
+
+	tq := elastic.NewTermFilter(field, value)
+	ef.filters = append(ef.filters, tq)
+	return ef
 }
 
-// MatchPartial implemented by ElasticSearch uses the 'wildcard' directive.
-func (eq *ElasticQuery) MatchPartial(field string,
-	value string) search.Query {
-	wq := elastic.NewWildcardQuery(field, value)
-	eq.ss = eq.ss.Query(&wq)
-	return eq
+// AddRegex uses regex filter directive.
+func (ef *ElasticFilter) AddRegex(field string,
+	value string) search.FilterQuery {
+
+	wq := elastic.NewRegexpFilter(field, value)
+	ef.filters = append(ef.filters, wq)
+	return ef
 }
 
 // Order sorts the results for the given field.
@@ -127,6 +149,26 @@ func (eq *ElasticQuery) Limit(num int) search.Query {
 
 // Run runs the query and returns results and error, if any.
 func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
+	if eq.filter != nil {
+		q := elastic.NewFilteredQuery(elastic.NewMatchAllQuery())
+		if eq.filterType == 0 {
+			return docs, errors.New("Filter present, but not set")
+
+		} else if eq.filterType == 1 {
+			af := elastic.NewAndFilter(eq.filter.filters...)
+			q = q.Filter(af)
+
+		} else if eq.filterType == 2 {
+			of := elastic.NewOrFilter(eq.filter.filters...)
+			q = q.Filter(of)
+
+		} else {
+			return docs, errors.New("Invalid filter type")
+		}
+
+		eq.ss = eq.ss.Query(q)
+	}
+
 	result, err := eq.ss.Do()
 	if err != nil {
 		x.LogErr(log, err).Error("While running query")
