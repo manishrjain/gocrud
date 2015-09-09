@@ -161,6 +161,9 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 		} else if eq.filterType == 2 {
 			of := elastic.NewOrFilter(eq.filter.filters...)
 			q = q.Filter(of)
+
+		} else {
+			return docs, errors.New("Invalid filter type")
 		}
 
 		eq.ss = eq.ss.Query(q)

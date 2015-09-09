@@ -41,9 +41,9 @@ func main() {
 		return
 	}
 
-	docs, err := engine.NewQuery("test").
-		MatchExact("Data.Id", "mrjn").
-		Order("-Data.Ts").Limit(*num).Run()
+	q := engine.NewQuery("test").Order("-Data.Ts").Limit(*num)
+	q.NewAndFilter().AddExact("Data.Id", "mrjn")
+	docs, err := q.Run()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return
