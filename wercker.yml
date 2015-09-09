@@ -16,6 +16,9 @@ box: golang
 
     # - mongodb
     # http://devcenter.wercker.com/docs/services/mongodb.html
+services:
+  - elasticsearch
+
 build:
   # The steps that will be executed on build
   # Steps make up the actions in your pipeline
@@ -27,6 +30,10 @@ build:
     - setup-go-workspace
 
     # Gets the dependencies
+    - script:
+      name: env
+      code: env
+
     - script:
         name: go get
         code: |
