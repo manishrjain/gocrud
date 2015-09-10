@@ -9,6 +9,10 @@ Go framework to simplify creating, reading, updating, and deleting arbitrary dep
 
 ## Install
 ```bash
+# To get stable APIs v1
+go get -v http://gopkg.in/manishrjain/gocrud.v1
+
+# For constantly evolving master
 go get -v github.com/manishrjain/gocrud
 # Look at usage examples to see how it works.
 ```
