@@ -7,15 +7,16 @@ Go framework to simplify creating, reading, updating, and deleting arbitrary dep
 [![wercker status](https://app.wercker.com/status/08406d64ea74cab2dd8155944e56b87d/m "wercker status")](https://app.wercker.com/project/bykey/08406d64ea74cab2dd8155944e56b87d)
 [![GoDoc](https://godoc.org/github.com/manishrjain/gocrud?status.svg)](https://godoc.org/github.com/manishrjain/gocrud)
 
-## Install
-```bash
-# To get stable APIs v1
-go get -v http://gopkg.in/manishrjain/gocrud.v1
+## Releases
 
-# For constantly evolving master
-go get -v github.com/manishrjain/gocrud
-# Look at usage examples to see how it works.
-```
+Note that the master branch always refers to latest version of Gocrud, which would contain breaking changes.
+**To use stable version of Gocrud APIs, please use the packages released via gopkg.in.**
+
+Gocrud version | Install instructions | Godoc | Source
+:---: | --- | --- | ---
+**v1** (stable) | `go get -v gopkg.in/manishrjain/gocrud.v1/...` |  [godoc](http://godoc.org/gopkg.in/manishrjain/gocrud.v1) | [source](https://github.com/manishrjain/gocrud/tree/v1)
+**master** (dev) | `go get -v github.com/manishrjain/gocrud/...` | [godoc](https://godoc.org/github.com/manishrjain/gocrud) | [source](https://github.com/manishrjain/gocrud)
+
 
 ## Questions / Support
 I hang out at the gophers.slack.com, at `#gocrud` channel.
@@ -67,10 +68,10 @@ type Engine interface {
 }
 
 type Query interface {
-	MatchExact(field string, value interface{}) Query
 	Limit(num int) Query
 	Order(field string) Query
 	Run() ([]x.Doc, error)
+  // and few others
 }
 ```
 
