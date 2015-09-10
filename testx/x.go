@@ -1,6 +1,7 @@
 package testx
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ var galaxies = [...]string{
 	"galaxy ngc 1512", "ngc 3370", "m81",
 }
 
-func AddDocs(e search.Engine, t *testing.T) {
+func AddDocs(e search.Engine) {
 	for idx, name := range galaxies {
 		var d x.Doc
 		d.Id = x.UniqueString(5)
@@ -26,7 +27,7 @@ func AddDocs(e search.Engine, t *testing.T) {
 		d.Data = m
 
 		if err := e.Update(d); err != nil {
-			t.Fatalf("While updating: %v", err)
+			log.Fatalf("While updating: %v", err)
 			return
 		}
 	}

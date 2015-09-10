@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/manishrjain/gocrud/testx"
 )
@@ -13,31 +14,41 @@ var galaxies = [...]string{
 	"galaxy ngc 1512", "ngc 3370", "m81",
 }
 
-func initialize(t *testing.T) *Elastic {
+func initialize() *Elastic {
 	addr := os.Getenv("ELASTICSEARCH_PORT_9200_TCP_ADDR")
 	if len(addr) == 0 {
-		t.Log("Elastic Search environment vars not set")
 		return nil
 	}
 
 	es := new(Elastic)
-	es.Init("http://" + addr)
-	testx.AddDocs(es, t)
+	es.Init("http://" + addr + ":9200")
+	es.DropIndex()
+	testx.AddDocs(es)
 	return es
 }
 
 func TestNewAndQuery(t *testing.T) {
-	es := initialize(t)
 	if es == nil {
+		t.Log("Elastic Search environment vars not set")
 		return
 	}
 	testx.RunAndFilter(es, t)
 }
 
 func TestNewOrFilter(t *testing.T) {
-	es := initialize(t)
 	if es == nil {
+		t.Log("Elastic Search environment vars not set")
 		return
 	}
 	testx.RunOrFilter(es, t)
+}
+
+var es *Elastic
+
+func init() {
+	es = initialize()
+	if es == nil {
+		return
+	}
+	time.Sleep(5 * time.Second) // To allow updates to become available for search.
 }

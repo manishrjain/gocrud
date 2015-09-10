@@ -77,6 +77,12 @@ func (es *Elastic) Init(args ...string) {
 	log.Debug("Connected with ElasticSearch")
 }
 
+// DropIndex is useful for testing purposes.
+func (es *Elastic) DropIndex() error {
+	_, err := es.client.DeleteIndex("gocrud").Do()
+	return err
+}
+
 // Update checks the validify of given document, and the.
 // external versioning via the timestamp of the document.
 func (es *Elastic) Update(doc x.Doc) error {
