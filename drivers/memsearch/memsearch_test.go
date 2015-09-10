@@ -6,16 +6,15 @@ import (
 	"github.com/manishrjain/gocrud/testx"
 )
 
-func initialize(t *testing.T) *MemSearch {
+func initialize() *MemSearch {
 	ms := new(MemSearch)
 	ms.Init()
 
-	testx.AddDocs(ms, t)
+	testx.AddDocs(ms)
 	return ms
 }
 
 func TestNewAndFilter(t *testing.T) {
-	ms := initialize(t)
 	testx.RunAndFilter(ms, t)
 }
 
@@ -29,6 +28,11 @@ var soln = [...]string{
 }
 
 func TestNewOrFilter(t *testing.T) {
-	ms := initialize(t)
 	testx.RunOrFilter(ms, t)
+}
+
+var ms *MemSearch
+
+func init() {
+	ms = initialize()
 }
