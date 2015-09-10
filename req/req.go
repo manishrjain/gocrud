@@ -5,7 +5,7 @@
 // to assign to new entities, and setting the storage system.
 package req
 
-import "github.com/manishrjain/gocrud/x"
+import "gopkg.in/manishrjain/gocrud.v1/x"
 
 var log = x.Log("req")
 

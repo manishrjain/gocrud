@@ -11,7 +11,7 @@
 //
 // Cassandra driver can now be imported, and initialized in social.go,
 // or any other client.
-// import _ "github.com/manishrjain/gocrud/drivers/cassandra"
+// import _ "gopkg.in/manishrjain/gocrud.v1/drivers/cassandra"
 // Initialize in main():
 // store.Get().Init("cassone", "crudtest", "instructions")
 package cassandra
@@ -20,8 +20,8 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
-	"github.com/manishrjain/gocrud/store"
-	"github.com/manishrjain/gocrud/x"
+	"gopkg.in/manishrjain/gocrud.v1/store"
+	"gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 var log = x.Log("cassandra")

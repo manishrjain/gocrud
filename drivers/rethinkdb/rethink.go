@@ -13,8 +13,8 @@ package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/manishrjain/gocrud/store"
-	"github.com/manishrjain/gocrud/x"
+	"gopkg.in/manishrjain/gocrud.v1/store"
+	"gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 var log = x.Log("rethinkdb")

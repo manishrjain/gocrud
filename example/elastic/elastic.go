@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	_ "github.com/manishrjain/gocrud/drivers/elasticsearch"
-	"github.com/manishrjain/gocrud/search"
-	"github.com/manishrjain/gocrud/x"
+	_ "gopkg.in/manishrjain/gocrud.v1/drivers/elasticsearch"
+	"gopkg.in/manishrjain/gocrud.v1/search"
+	"gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 var eip = flag.String("ipaddr", "", "IP address of Elastic Search")

@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"time"
 
-	_ "github.com/manishrjain/gocrud/drivers/leveldb"
-	_ "github.com/manishrjain/gocrud/drivers/memsearch"
-	"github.com/manishrjain/gocrud/indexer"
-	"github.com/manishrjain/gocrud/req"
-	"github.com/manishrjain/gocrud/search"
-	"github.com/manishrjain/gocrud/store"
-	"github.com/manishrjain/gocrud/x"
+	_ "gopkg.in/manishrjain/gocrud.v1/drivers/leveldb"
+	_ "gopkg.in/manishrjain/gocrud.v1/drivers/memsearch"
+	"gopkg.in/manishrjain/gocrud.v1/indexer"
+	"gopkg.in/manishrjain/gocrud.v1/req"
+	"gopkg.in/manishrjain/gocrud.v1/search"
+	"gopkg.in/manishrjain/gocrud.v1/store"
+	"gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 var log = x.Log("usage")

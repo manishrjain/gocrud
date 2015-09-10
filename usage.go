@@ -2,11 +2,11 @@
 package usage
 
 import (
-	_ "github.com/manishrjain/gocrud/indexer"
-	_ "github.com/manishrjain/gocrud/req"
-	_ "github.com/manishrjain/gocrud/search"
-	_ "github.com/manishrjain/gocrud/store"
-	_ "github.com/manishrjain/gocrud/x"
+	_ "gopkg.in/manishrjain/gocrud.v1/indexer"
+	_ "gopkg.in/manishrjain/gocrud.v1/req"
+	_ "gopkg.in/manishrjain/gocrud.v1/search"
+	_ "gopkg.in/manishrjain/gocrud.v1/store"
+	_ "gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 func Store() {

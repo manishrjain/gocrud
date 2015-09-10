@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/manishrjain/gocrud/search"
-	"github.com/manishrjain/gocrud/store"
-	"github.com/manishrjain/gocrud/x"
+	"gopkg.in/manishrjain/gocrud.v1/search"
+	"gopkg.in/manishrjain/gocrud.v1/store"
+	"gopkg.in/manishrjain/gocrud.v1/x"
 )
 
 // Incremental indexing server to continously regenerate
