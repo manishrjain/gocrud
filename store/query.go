@@ -30,18 +30,52 @@ type Object struct {
 	NanoTs int64
 }
 
+type Versions struct {
+	versions []Object
+}
+
 // Result stores the final entity state retrieved from Store upon running
 // the instructions provided by Query.
 type Result struct {
 	Id       string
 	Kind     string
-	Columns  map[string]Object
+	Columns  map[string]*Versions
 	Children []*Result
 }
 
 type runResult struct {
 	Result *Result
 	Err    error
+}
+
+func (v *Versions) add(o Object) {
+	if len(v.versions) > 0 {
+		i := len(v.versions) - 1
+		if v.versions[i].NanoTs > o.NanoTs {
+			// unsorted list. Gocrud code is doing something wrong.
+			log.Fatal("Appending an object with lower ts to a sorted list")
+		}
+	}
+	v.versions = append(v.versions, o)
+}
+
+func (v Versions) Latest() Object {
+	if len(v.versions) == 0 {
+		return Object{}
+	}
+	i := len(v.versions) - 1
+	return v.versions[i]
+}
+
+func (v Versions) Oldest() Object {
+	if len(v.versions) == 0 {
+		return Object{}
+	}
+	return v.versions[0]
+}
+
+func (v Versions) Count() int {
+	return len(v.versions)
 }
 
 // Retrieve the parent id for given entity id. Return ErrNoParent if parent is
@@ -135,7 +169,7 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 	}
 
 	result := new(Result)
-	result.Columns = make(map[string]Object)
+	result.Columns = make(map[string]*Versions)
 	it := its[0]
 	result.Id = it.SubjectId
 	result.Kind = it.SubjectType
@@ -178,10 +212,10 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 				return
 			}
 
-			// An edge with a later timestamp would overwrite an edge
-			// with the same predicate with an earlier timestamp to
-			// show the latest version of object.
-			result.Columns[it.Predicate] = o // data loss
+			if _, vok := result.Columns[it.Predicate]; !vok {
+				result.Columns[it.Predicate] = new(Versions)
+			}
+			result.Columns[it.Predicate].add(o)
 			continue
 		}
 
@@ -256,11 +290,15 @@ func (r *Result) ToMap() (data map[string]interface{}) {
 	data["id"] = r.Id
 	data["kind"] = r.Kind
 	var ts int64
-	for k, o := range r.Columns {
-		data[k] = o.Value
-		data["source"] = o.Source // Loss of information.
-		if o.NanoTs > ts {
-			ts = o.NanoTs
+	for pred, versions := range r.Columns {
+		// During conversion to JSON, to keep things simple,
+		// we're dropping older versions of predicates, and
+		// source and ts information across all the predicates,
+		// keeping only the latest one.
+		data[pred] = versions.Latest().Value
+		data["source"] = versions.Latest().Source // Loss of information.
+		if versions.Latest().NanoTs > ts {
+			ts = versions.Latest().NanoTs
 		}
 	}
 	data["ts_millis"] = int(ts / 1000000) // Loss of information. Picking up latest mod time.
