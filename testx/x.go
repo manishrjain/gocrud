@@ -15,6 +15,10 @@ var galaxies = [...]string{
 	"galaxy ngc 1512", "ngc 3370", "m81",
 }
 
+// dummy function
+func Versions() {
+}
+
 func AddDocs(e search.Engine) {
 	for idx, name := range galaxies {
 		var d x.Doc
