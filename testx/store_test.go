@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	_ "github.com/manishrjain/gocrud/drivers/leveldb"
-	"github.com/manishrjain/gocrud/req"
-	"github.com/manishrjain/gocrud/store"
+	_ "gopkg.in/manishrjain/gocrud.v1/drivers/leveldb"
+	"gopkg.in/manishrjain/gocrud.v1/req"
+	"gopkg.in/manishrjain/gocrud.v1/store"
 )
 
 func TestVersions(t *testing.T) {
