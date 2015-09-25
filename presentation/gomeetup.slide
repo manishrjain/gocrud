@@ -1,0 +1,52 @@
+Gocrud
+Go Meetup Brisbane
+28 Sep 2015
+Tags: go golang
+
+Manish R Jain
+Backend Developer
+Ex-Googler - Web Search & Knowledge
+manishrjain@gmail.com
+https://mrjn.xyz
+@manishrjain
+
+* What is Gocrud?
+
+Go framework to help build horizontally scalable and database-wise pluggable
+CRUD-heavy backends from the get go.
+
+* Why?
+
+Because most startup founders have these concerns:
+
+- Worry about MVP, not maintenance.
+- Pick technology stack based on hype or convenience, not research.
+- Little thought spent on horizontal scaling.
+- Little thought spent on search engines to provide read-only access.
+- Eager to sustain technical cancer (/debt).
+
+* How does Gocrud help?
+
+- Allows you to choose from a variety of data stores.
+- No strict data schema, thanks to Graph like operations.
+- Swap out one data store with another, with no code changes.
+- Introduce search engines (like ElasticSearch) early on, to provide advanced search functionality.
+
+* Storing data
+# Show code here
+
+* Retrieving data from store
+# Show code here
+
+* Search
+Search gets updated automatically, as Entities get modified.
+
+* Searching data
+# Show search code here
+
+* So what's the exit Strategy?
+
+- I hate frameworks!
+- Every framework should have a way to be abandoned.
+- Create `store` and `search` modules, overwrite those functions with your custom implementation.
+# Show the functions here.
