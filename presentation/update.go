@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"gopkg.in/manishrjain/gocrud.v1/req"
 	"gopkg.in/manishrjain/gocrud.v1/store"
 )
@@ -24,7 +26,7 @@ func update() {
 	_ = u.Execute(ctx)       // Returns error
 }
 
-func query() {
+func query(w http.ResponseWriter) {
 	// Collect all Post entities under User userid.
 	p := store.NewQuery("userid").Collect("Post")
 	p.Collect("Like") // Collect all Like entities for Post entities.
