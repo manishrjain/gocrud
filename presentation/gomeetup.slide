@@ -19,10 +19,10 @@ CRUD-heavy backends from the get go.
 
 Because most startup founders have these concerns:
 
-- Worry about MVP, not maintenance.
+- Worry about MVP, not design and maintenance.
 - Pick technology stack based on hype or convenience, not research.
 - Little thought spent on horizontal scaling.
-- Little thought spent on search engines to provide read-only access.
+- Little thought spent on search engines to provide read-only access, or complex queries.
 - Eager to sustain technical cancer (/debt).
 
 * How does Gocrud help?
@@ -32,8 +32,39 @@ Because most startup founders have these concerns:
 - Swap out one data store with another, with no code changes.
 - Introduce search engines (like ElasticSearch) early on, to provide advanced search functionality.
 
-* Storing data
-# Show code here
+* Design Principles
+
+- *Versioning*: Keep track of all edits to the data. No blind overwriting.
+- *Authorship*: Track who edited what.
+- *Retention*: Retain all the edits, including deletion. Never _actually_ delete data, only mark it as deleted.
+
+* Use Case: Build a social platform
+In a SQL / NoSQL table, this is how the data might be represented.
+
+.image Plain.png
+
+* Also consider versioning to allow edits and reverts
+Added a version field to all tables.
+
+.image Version.png
+
+* Also ensure retention to allow accountability
+Added a deleted bit to all tables. As you can see, this gets complicated pretty fast.
+
+.image Version_Delete.png
+
+* Representation in Gocrud
+As you can see, the table appraoch gets complicated pretty fast.
+
+Instead, Gocrud uses graph approach.
+
+- Tables are considered entities, and all their properties and connections are edges.
+
+.image social_graph.bmp
+
+* Code: Updating data
+.code update.go
+
 
 * Retrieving data from store
 # Show code here
