@@ -15,28 +15,42 @@ https://mrjn.xyz
 Go framework to help build horizontally scalable and database-wise pluggable
 CRUD-heavy backends from the get go.
 
+Currently supports these technologies:
+
+- LevelDB
+- MySQL
+- PostgreSQL
+- Cassandra
+- MongoDB
+- Google Datastore
+- RethinkDB
+- Elastic Search (search engine)
+
 * Why?
 
 Because most startup founders have these concerns:
 
 - Worry about MVP, not design and maintenance.
 - Pick technology stack based on hype or convenience, not research.
-- Little thought spent on horizontal scaling.
+- Little thought spent on horizontal scaling of database.
 - Little thought spent on search engines to provide read-only access, or complex queries.
-- Eager to sustain technical cancer (/debt).
+- Eager to sustain *technical*cancer* (/debt).
 
 * How does Gocrud help?
 
+- Keeps table schema stupid simple!
+- Infinitely flexible data schema, thanks to Graph like operations.
+- Data storage and representation is inherently horizontally scalable.
 - Allows you to choose from a variety of data stores.
-- No strict data schema, thanks to Graph like operations.
-- Swap out one data store with another, with no code changes.
-- Introduce search engines (like ElasticSearch) early on, to provide advanced search functionality.
+- Act as an abstraction layer above data store to keep application logic clear and separate.
+- As things scale, swap out one data store with another, with no code changes.
+- Introduce search engines (like ElasticSearch) early on, to provide advanced search functionality, and avoid _abusing_ data stores.
 
 * Design Principles
 
-- *Versioning*: Keep track of all edits to the data. No blind overwriting.
+- *Versioning*: Keep track of all edits to the data. No overwrites / replaces.
 - *Retention*: Retain all the edits, including deletion. Never _actually_ delete data, only mark it as deleted.
-- *Authorship*: Always track who edited what.
+- *Authorship*: Track authorship of every change made.
 
 * Use Case: Build a social platform
 In a SQL / NoSQL table, this is how the data might be represented.
@@ -49,7 +63,7 @@ Added a version field to all tables.
 .image Version.png
 
 * Implement retention to allow accountability
-Added a deleted bit to all tables. As you can see, this gets complicated pretty fast.
+Added a deleted bit to all tables, to avoid deleting data.
 
 .image Version_Delete.png
 
@@ -59,10 +73,10 @@ Keep a separate log table to store all the edits to the data.
 * Representation in Gocrud
 As you can see, the SQL / NoSQL table approach gets pretty complicated, pretty fast.
 
-Instead, Gocrud uses graph approach.
+Instead, Gocrud uses *graph*approach*.
 
 - Tables are considered entities, and all their properties and connections are edges.
-- Edges are stored in an _append_only_ mode to data stores, as modifications happen.
+- Edges are stored in an _append_only_ mode to data stores.
 
 .image social_graph.bmp
 
