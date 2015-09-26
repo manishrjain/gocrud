@@ -35,26 +35,29 @@ Because most startup founders have these concerns:
 * Design Principles
 
 - *Versioning*: Keep track of all edits to the data. No blind overwriting.
-- *Authorship*: Track who edited what.
 - *Retention*: Retain all the edits, including deletion. Never _actually_ delete data, only mark it as deleted.
+- *Authorship*: Always track who edited what.
 
 * Use Case: Build a social platform
 In a SQL / NoSQL table, this is how the data might be represented.
 
 .image Plain.png
 
-* Also consider versioning to allow edits and reverts
+* Implement versioning to allow edits and reverts
 Added a version field to all tables.
 
 .image Version.png
 
-* Also ensure retention to allow accountability
+* Implement retention to allow accountability
 Added a deleted bit to all tables. As you can see, this gets complicated pretty fast.
 
 .image Version_Delete.png
 
+* Implement Authorship
+Keep a separate log table to store all the edits to the data.
+
 * Representation in Gocrud
-As you can see, the table appraoch gets complicated pretty fast.
+As you can see, the SQL / NoSQL table approach gets pretty complicated, pretty fast.
 
 Instead, Gocrud uses graph approach.
 
@@ -63,11 +66,10 @@ Instead, Gocrud uses graph approach.
 .image social_graph.bmp
 
 * Code: Updating data
-.code update.go
+.code update.go /^func update/,/^}/
 
-
-* Retrieving data from store
-# Show code here
+* Code: Querying data from store
+.code update.go /^func query/,/^}/
 
 * Search
 Search gets updated automatically, as Entities get modified.
