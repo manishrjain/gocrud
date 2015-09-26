@@ -62,24 +62,28 @@ As you can see, the SQL / NoSQL table approach gets pretty complicated, pretty f
 Instead, Gocrud uses graph approach.
 
 - Tables are considered entities, and all their properties and connections are edges.
+- Edges are stored in an _append_only_ mode to data stores, as modifications happen.
 
 .image social_graph.bmp
 
 * Code: Updating data
-.code update.go /^func update/,/^}/
+.code example.go /^func storeUpdate/,/^}/
 
 * Code: Querying data from store
-.code update.go /^func query/,/^}/
+.code example.go /^func storeQuery/,/^}/
 
-* Search
-Search gets updated automatically, as Entities get modified.
+* Code: Indexer for search engine
+As Entities get modified in store, their corresponding search docs get re-generated and updated in search engine using *Indexers*.
 
-* Searching data
-# Show search code here
+.code example.go /SimpleIndexer/,/end_simple/
+
+* Code: Query search engine
+.code example.go /^func searchQuery/,/^}/
+.code output.txt
 
 * So what's the exit Strategy?
 
 - I hate frameworks!
 - Every framework should have a way to be abandoned.
-- Create `store` and `search` modules, overwrite those functions with your custom implementation.
+- Create *store* and *search* modules, overwrite those functions with your custom implementation.
 # Show the functions here.
