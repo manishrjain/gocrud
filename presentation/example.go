@@ -42,7 +42,7 @@ func storeQuery() {
 	// Collect all Comment entities, and Likes on those comments.
 	p.Collect("Comment").Collect("Like")
 
-	// Alternatively, get everything up to certain depth.
+	// Alternatively, collect everything via breadth first iteration.
 	p = store.NewQuery("userid").UptoDepth(10)
 
 	result, _ := p.Run()

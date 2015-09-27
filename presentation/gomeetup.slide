@@ -36,6 +36,9 @@ Because most startup founders have these concerns:
 - Little thought spent on search engines to provide read-only access, or complex queries.
 - Eager to sustain *technical*cancer* (/debt).
 
+All these early decisions cause issues later on, as traffic starts growing.
+It's hard to rewrite code or add abstraction layers later between code and database.
+
 * How does Gocrud help?
 
 - Keeps table schema stupid simple!
@@ -43,7 +46,7 @@ Because most startup founders have these concerns:
 - Data storage and representation is inherently horizontally scalable.
 - Allows you to choose from a variety of data stores.
 - Act as an abstraction layer above data store to keep application logic clear and separate.
-- As things scale, swap out one data store with another, with no code changes.
+- As things scale if data store becomes an issue, swap it out with another, with no code changes.
 - Introduce search engines (like ElasticSearch) early on, to provide advanced search functionality, and avoid _abusing_ data stores.
 
 * Design Principles
@@ -70,13 +73,15 @@ Added a deleted bit to all tables, to avoid deleting data.
 * Implement Authorship
 Keep a separate log table to store all the edits to the data.
 
+.image logtable.jpg
+
 * Representation in Gocrud
 As you can see, the SQL / NoSQL table approach gets pretty complicated, pretty fast.
 
 Instead, Gocrud uses *graph*approach*.
 
 - Tables are considered entities, and all their properties and connections are edges.
-- Edges are stored in an _append_only_ mode to data stores.
+- Edges are inserted in _append_only_ mode in data stores.
 
 .image social_graph.bmp
 
@@ -97,7 +102,8 @@ As Entities get modified in store, their corresponding search docs get re-genera
 
 * So what's the exit Strategy?
 
-- I hate frameworks!
-- Every framework should have a way to be abandoned.
+- I hate frameworks! Every framework should have a way to be abandoned.
 - Create *store* and *search* modules, overwrite those functions with your custom implementation.
+
+.code interface.go
 # Show the functions here.
