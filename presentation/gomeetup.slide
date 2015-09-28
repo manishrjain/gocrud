@@ -85,11 +85,27 @@ Instead, Gocrud uses *graph*approach*.
 
 .image social_graph.bmp
 
+* How are principles implemented
+`Edge`=`(Entity,`Property,`Value/EntityId,`Source,`Timestamp)`
+
+- *Versioning*: All writes add new *Edges*, instead of replacing previous ones. When reading, choose the latest version.
+`(Entity,`Property,`Val1,`ts1)`>`(Entity,`Property,`Val0,`ts0)`
+
+- *Retention*: When deleting an *Entity*, add an edge with property delete. When reading, if delete edge is found, ignore the entity.
+`(Entity,`"_deleted_",`true)`
+
+- *Authorship*: Every *Edge* stores it's source, so we can easily find all edits by an author. So, data store also acts as a log table.
+
+
+
 * Code: Updating data
 .code example.go /^func storeUpdate/,/^}/
 
 * Code: Querying data from store
 .code example.go /^func storeQuery/,/^}/
+
+* Output
+.code queryoutput.txt
 
 * Code: Indexer for search engine
 As Entities get modified in store, their corresponding search docs get re-generated and updated in search engine using *Indexers*.
