@@ -51,6 +51,14 @@ func TestCount(t *testing.T) {
 	testx.RunCount(es, t)
 }
 
+func TestFrom(t *testing.T) {
+	if es == nil {
+		t.Log("Elastic Search environment vars not set")
+		return
+	}
+	testx.RunFromLimit(es, t)
+}
+
 var es *Elastic
 
 func init() {

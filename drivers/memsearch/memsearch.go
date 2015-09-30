@@ -24,6 +24,7 @@ type MemQuery struct {
 	Docs       []x.Doc
 	filter     *MemFilter
 	filterType int // 0 = no filter, 1 = AND, 2 = OR
+	from       int
 	limit      int
 	order      string
 }
@@ -129,6 +130,11 @@ func matchRegex(doc x.Doc, field, value string) bool {
 		}
 	}
 	return false
+}
+
+func (mq *MemQuery) From(num int) search.Query {
+	mq.from = num
+	return mq
 }
 
 func (mq *MemQuery) Limit(num int) search.Query {
@@ -309,6 +315,9 @@ func (mq *MemQuery) Run() (docs []x.Doc, rerr error) {
 	}
 	if len(mq.order) > 0 {
 		mq.bringOrder(mq.order)
+	}
+	if mq.from > 0 && mq.from < len(mq.Docs) {
+		mq.Docs = mq.Docs[mq.from:]
 	}
 	if mq.limit > 0 && len(mq.Docs) > mq.limit {
 		mq.Docs = mq.Docs[0:mq.limit]

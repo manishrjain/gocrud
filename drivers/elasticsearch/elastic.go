@@ -21,6 +21,7 @@ type Elastic struct {
 type ElasticQuery struct {
 	client     *elastic.Client
 	sort       string
+	from       int
 	limit      int
 	kind       string
 	filter     *ElasticFilter
@@ -146,6 +147,12 @@ func (eq *ElasticQuery) Order(field string) search.Query {
 	return eq
 }
 
+// From sets the offset.
+func (eq *ElasticQuery) From(num int) search.Query {
+	eq.from = num
+	return eq
+}
+
 // Limit limits the number of results to num.
 func (eq *ElasticQuery) Limit(num int) search.Query {
 	eq.limit = num
@@ -180,6 +187,9 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 		} else {
 			ss = ss.Sort(eq.sort, true)
 		}
+	}
+	if eq.from > 0 {
+		ss = ss.From(eq.from)
 	}
 	if eq.limit > 0 {
 		ss = ss.Size(eq.limit)

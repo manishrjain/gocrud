@@ -109,3 +109,32 @@ func RunCount(e search.Engine, t *testing.T) {
 		t.Errorf("Count of results should be %v. Found: %v\n", len(soln), count)
 	}
 }
+
+func check(doc x.Doc, name string, t *testing.T) {
+	m := doc.Data.(map[string]interface{})
+	val, found := m["name"]
+	if !found {
+		t.Error("Should find name")
+
+	} else {
+		if val.(string) != name {
+			t.Errorf("Expected: %v. Found: %v\n", name, val.(string))
+		}
+	}
+}
+
+func RunFromLimit(e search.Engine, t *testing.T) {
+	q := e.NewQuery("Galaxy").Order("-pos").From(2).Limit(2)
+	q.NewOrFilter().AddRegex("name", ".*galaxy.*").
+		AddRegex("name", ".*ngc.*").AddExact("name", "m81")
+	docs, err := q.Run()
+	if err != nil {
+		t.Fatalf("While running query: %v", err)
+		return
+	}
+	if len(docs) != 2 {
+		t.Errorf("Number of docs should be %v. Found: %v\n", 2, len(docs))
+	}
+	check(docs[0], "galaxy ngc 1512", t)
+	check(docs[1], "ngc 123", t)
+}
