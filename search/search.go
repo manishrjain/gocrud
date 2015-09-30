@@ -27,6 +27,10 @@ type Query interface {
 	// among individual filter queries.
 	NewOrFilter() FilterQuery
 
+	// From would set the offset from the first result. Use it along
+	// with Limit(int) to do pagination.
+	From(num int) Query
+
 	// Limit would limit the number of results to num.
 	Limit(num int) Query
 

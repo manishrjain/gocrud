@@ -35,6 +35,10 @@ func TestCount(t *testing.T) {
 	testx.RunCount(ms, t)
 }
 
+func TestFrom(t *testing.T) {
+	testx.RunFromLimit(ms, t)
+}
+
 var ms *MemSearch
 
 func init() {
