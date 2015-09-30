@@ -19,7 +19,10 @@ type Elastic struct {
 
 // ElasticQuery implements methods declared by search.Query.
 type ElasticQuery struct {
-	ss         *elastic.SearchService
+	client     *elastic.Client
+	sort       string
+	limit      int
+	kind       string
 	filter     *ElasticFilter
 	filterType int // 0 = no filter, 1 = AND, 2 = OR
 }
@@ -139,22 +142,30 @@ func (ef *ElasticFilter) AddRegex(field string,
 
 // Order sorts the results for the given field.
 func (eq *ElasticQuery) Order(field string) search.Query {
-	if field[:1] == "-" {
-		eq.ss = eq.ss.Sort(field[1:], false)
-	} else {
-		eq.ss = eq.ss.Sort(field, true)
-	}
+	eq.sort = field
 	return eq
 }
 
 // Limit limits the number of results to num.
 func (eq *ElasticQuery) Limit(num int) search.Query {
-	eq.ss = eq.ss.Size(num)
+	eq.limit = num
 	return eq
 }
 
 // Run runs the query and returns results and error, if any.
 func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
+	ss := eq.client.Search("gocrud").Type(eq.kind)
+	if len(eq.sort) > 0 {
+		if eq.sort[:1] == "-" {
+			ss = ss.Sort(eq.sort[1:], false)
+		} else {
+			ss = ss.Sort(eq.sort, true)
+		}
+	}
+	if eq.limit > 0 {
+		ss = ss.Size(eq.limit)
+	}
+
 	if eq.filter != nil {
 		q := elastic.NewFilteredQuery(elastic.NewMatchAllQuery())
 		if eq.filterType == 0 {
@@ -172,10 +183,10 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 			return docs, errors.New("Invalid filter type")
 		}
 
-		eq.ss = eq.ss.Query(q)
+		ss = ss.Query(q)
 	}
 
-	result, err := eq.ss.Do()
+	result, err := ss.Do()
 	if err != nil {
 		x.LogErr(log, err).Error("While running query")
 		return docs, err
@@ -196,7 +207,8 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 // NewQuery creates a new query object, to return results of type kind.
 func (es *Elastic) NewQuery(kind string) search.Query {
 	eq := new(ElasticQuery)
-	eq.ss = es.client.Search("gocrud").Type(kind)
+	eq.client = es.client
+	eq.kind = kind
 	return eq
 }
 
