@@ -1,6 +1,7 @@
 # gocrud
 Go framework to simplify creating, reading, updating, and deleting arbitrary depth structured data — to make building REST services fast and easy.
 
+ * [Gocrud Presentation](https://go-talks.appspot.com/github.com/manishrjain/gocrud/presentation/gomeetup.slide)
  * [Link to blog posts](https://mrjn.xyz/categories/gocrud/)
  * [Example Usage](example.md)
 
