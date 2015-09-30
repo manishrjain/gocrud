@@ -137,6 +137,7 @@ As Entities get modified in store, their corresponding search docs get re-genera
 # Show the functions here.
 
 * Try it out!
+.link https://github.com/manishrjain/gocrud
 Gocrud cut down the code of a startup by half, simplified unit testing and added search functionality which didn't exist before.
 
 .link https://mrjn.xyz/post/Porting-To-Gocrud/
