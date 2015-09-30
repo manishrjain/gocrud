@@ -31,6 +31,10 @@ func TestNewOrFilter(t *testing.T) {
 	testx.RunOrFilter(ms, t)
 }
 
+func TestCount(t *testing.T) {
+	testx.RunCount(ms, t)
+}
+
 var ms *MemSearch
 
 func init() {

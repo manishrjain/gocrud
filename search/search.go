@@ -36,6 +36,9 @@ type Query interface {
 
 	// Run the generated query, providing resulting documents and error, if any.
 	Run() ([]x.Doc, error)
+
+	// Count the number of results that would be generated. Don't run the query.
+	Count() (int64, error)
 }
 
 type FilterQuery interface {
