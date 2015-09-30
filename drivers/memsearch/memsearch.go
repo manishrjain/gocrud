@@ -283,21 +283,28 @@ func (mq *MemQuery) runOrFilter(filters []Filter) error {
 	return nil
 }
 
+func (mq *MemQuery) runFilter() error {
+	if mq.filterType == 0 {
+		return errors.New("Filter present, but not set")
+
+	} else if mq.filterType == 1 {
+		if err := mq.runAndFilter(mq.filter.filters); err != nil {
+			return err
+		}
+	} else if mq.filterType == 2 {
+		if err := mq.runOrFilter(mq.filter.filters); err != nil {
+			return err
+		}
+	} else {
+		return errors.New("Invalid filter type")
+	}
+	return nil
+}
+
 func (mq *MemQuery) Run() (docs []x.Doc, rerr error) {
 	if mq.filter != nil {
-		if mq.filterType == 0 {
-			return docs, errors.New("Filter present, but not set")
-
-		} else if mq.filterType == 1 {
-			if err := mq.runAndFilter(mq.filter.filters); err != nil {
-				return docs, err
-			}
-		} else if mq.filterType == 2 {
-			if err := mq.runOrFilter(mq.filter.filters); err != nil {
-				return docs, err
-			}
-		} else {
-			return docs, errors.New("Invalid filter type")
+		if err := mq.runFilter(); err != nil {
+			return docs, err
 		}
 	}
 	if len(mq.order) > 0 {
@@ -307,6 +314,15 @@ func (mq *MemQuery) Run() (docs []x.Doc, rerr error) {
 		mq.Docs = mq.Docs[0:mq.limit]
 	}
 	return mq.Docs, nil
+}
+
+func (mq *MemQuery) Count() (rcount int64, rerr error) {
+	if mq.filter != nil {
+		if err := mq.runFilter(); err != nil {
+			return 0, err
+		}
+	}
+	return int64(len(mq.Docs)), nil
 }
 
 func init() {

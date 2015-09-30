@@ -152,6 +152,25 @@ func (eq *ElasticQuery) Limit(num int) search.Query {
 	return eq
 }
 
+func (eq *ElasticQuery) generateQuery() (rq elastic.FilteredQuery, rerr error) {
+	rq = elastic.NewFilteredQuery(elastic.NewMatchAllQuery())
+	if eq.filterType == 0 {
+		return rq, errors.New("Filter present, but not set")
+
+	} else if eq.filterType == 1 {
+		af := elastic.NewAndFilter(eq.filter.filters...)
+		rq = rq.Filter(af)
+
+	} else if eq.filterType == 2 {
+		of := elastic.NewOrFilter(eq.filter.filters...)
+		rq = rq.Filter(of)
+
+	} else {
+		return rq, errors.New("Invalid filter type")
+	}
+	return rq, nil
+}
+
 // Run runs the query and returns results and error, if any.
 func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 	ss := eq.client.Search("gocrud").Type(eq.kind)
@@ -167,20 +186,9 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 	}
 
 	if eq.filter != nil {
-		q := elastic.NewFilteredQuery(elastic.NewMatchAllQuery())
-		if eq.filterType == 0 {
-			return docs, errors.New("Filter present, but not set")
-
-		} else if eq.filterType == 1 {
-			af := elastic.NewAndFilter(eq.filter.filters...)
-			q = q.Filter(af)
-
-		} else if eq.filterType == 2 {
-			of := elastic.NewOrFilter(eq.filter.filters...)
-			q = q.Filter(of)
-
-		} else {
-			return docs, errors.New("Invalid filter type")
+		q, err := eq.generateQuery()
+		if err != nil {
+			return docs, err
 		}
 
 		ss = ss.Query(q)
@@ -202,6 +210,18 @@ func (eq *ElasticQuery) Run() (docs []x.Doc, rerr error) {
 		docs = append(docs, d)
 	}
 	return docs, nil
+}
+
+func (eq *ElasticQuery) Count() (rcount int64, rerr error) {
+	cs := eq.client.Count("gocrud").Type(eq.kind)
+	if eq.filter != nil {
+		q, err := eq.generateQuery()
+		if err != nil {
+			return 0, err
+		}
+		cs = cs.Query(q)
+	}
+	return cs.Do()
 }
 
 // NewQuery creates a new query object, to return results of type kind.

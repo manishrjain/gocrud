@@ -95,3 +95,17 @@ func RunOrFilter(e search.Engine, t *testing.T) {
 		}
 	}
 }
+
+func RunCount(e search.Engine, t *testing.T) {
+	q := e.NewQuery("Galaxy").Order("-pos")
+	q.NewOrFilter().AddRegex("name", ".*galaxy.*").
+		AddRegex("name", ".*ngc.*").AddExact("name", "m81")
+	count, err := q.Count()
+	if err != nil {
+		t.Fatalf("While running query: %v", err)
+		return
+	}
+	if count != 6 {
+		t.Errorf("Count of results should be %v. Found: %v\n", len(soln), count)
+	}
+}

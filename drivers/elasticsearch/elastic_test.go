@@ -43,6 +43,14 @@ func TestNewOrFilter(t *testing.T) {
 	testx.RunOrFilter(es, t)
 }
 
+func TestCount(t *testing.T) {
+	if es == nil {
+		t.Log("Elastic Search environment vars not set")
+		return
+	}
+	testx.RunCount(es, t)
+}
+
 var es *Elastic
 
 func init() {
