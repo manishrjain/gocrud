@@ -296,9 +296,9 @@ func (r *Result) ToMap() (data map[string]interface{}) {
 		// source and ts information across all the predicates,
 		// keeping only the latest one.
 		data[pred] = versions.Latest().Value
-		data["source"] = versions.Latest().Source // Loss of information.
 		if versions.Latest().NanoTs > ts {
 			ts = versions.Latest().NanoTs
+			data["source"] = versions.Latest().Source // Loss of information.
 		}
 	}
 	data["ts_millis"] = int(ts / 1000000) // Loss of information. Picking up latest mod time.
