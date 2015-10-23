@@ -175,6 +175,7 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 	result.Kind = it.SubjectType
 
 	waitTimes := 0
+	// TODO: This is an unbuffered channel. Why am I doing this? Look into it!
 	childChan := make(chan runResult)
 	for _, it := range its {
 		if it.Predicate == "_delete_" {
