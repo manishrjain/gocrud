@@ -291,8 +291,7 @@ func (r *Result) ToMap() (data map[string]interface{}) {
 	data["id"] = r.Id
 	data["kind"] = r.Kind
 	var ts_latest int64
-	var ts_oldest int64
-	ts_oldest = time.Now().UnixNano()
+	ts_oldest := time.Now().UnixNano()
 	for pred, versions := range r.Columns {
 		// During conversion to JSON, to keep things simple,
 		// we're dropping older versions of predicates, and
@@ -301,15 +300,15 @@ func (r *Result) ToMap() (data map[string]interface{}) {
 		data[pred] = versions.Latest().Value
 		if versions.Latest().NanoTs > ts_latest {
 			ts_latest = versions.Latest().NanoTs
-			data["source"] = versions.Latest().Source // Loss of information.
+			data["modifier"] = versions.Latest().Source // Loss of information.
 		}
 		if versions.Oldest().NanoTs < ts_oldest {
 			ts_oldest = versions.Oldest().NanoTs
 			data["creator"] = versions.Oldest().Source
 		}
 	}
-	data["creation_ts"] = int(ts_oldest / 1000000)
-	data["ts_millis"] = int(ts_latest / 1000000) // Loss of information. Picking up latest mod time.
+	data["creation_ms"] = int(ts_oldest / 1000000)
+	data["modification_ms"] = int(ts_latest / 1000000) // Loss of information. Picking up latest mod time.
 	kinds := make(map[string]bool)
 	for _, child := range r.Children {
 		kinds[child.Kind] = true
