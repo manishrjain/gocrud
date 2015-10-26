@@ -50,7 +50,7 @@ func TestVersions(t *testing.T) {
 	type jval struct {
 		Kind   string `json:"kind,omitempty"`
 		Id     string `json:"id,omitempty"`
-		Source string `json:"source,omitempty"`
+		Source string `json:"modifier,omitempty"`
 		Price  int    `json:"price,omitempty"`
 	}
 	js, err := result.ToJson()
