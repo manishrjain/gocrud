@@ -20,7 +20,11 @@ Gocrud version | Install instructions | Godoc | Source
 
 
 ## Questions / Support
-I hang out at the gophers.slack.com, at `#gocrud` channel.
+I primarily use IRC on freenode network. Channel is `#gocrud`. I'm `mrjn` on the network.
+[#gocrud on freenode](http://webchat.freenode.net?channels=%23gocrud&uio=d4)
+
+I also hang out at the gophers.slack.com, at `#gocrud` channel.
+Although, Slack doesn't have a linux client which is what my workstation runs, and hence, I prefer IRC over Slack.
 You can get an invitation to join Slack via this link:
 [Gopher Slack Signup](http://bit.ly/go-slack-signup).
 You can also direct message me, my user id is `@manishrjain`.
