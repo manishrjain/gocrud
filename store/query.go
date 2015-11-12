@@ -17,12 +17,13 @@ var (
 // Query stores the read instrutions, storing the instruction set
 // for the entities Query relates to.
 type Query struct {
-	kind      string
-	id        string
-	filterOut map[string]bool
-	maxDepth  int
-	children  []*Query
-	parent    *Query
+	kind       string
+	id         string
+	filterOut  map[string]bool
+	maxDepth   int
+	children   []*Query
+	parent     *Query
+	getDeleted bool
 }
 
 type Object struct {
@@ -114,6 +115,11 @@ func (q *Query) UptoDepth(level int) *Query {
 	return q
 }
 
+func (q *Query) AllowDeleted() *Query {
+	q.getDeleted = true
+	return q
+}
+
 // Collect specifies the kind of child entities to retrieve. Returns back
 // a new Query pointer pointing to those children entities as a collective.
 //
@@ -178,7 +184,7 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 	waitTimes := 0
 	childChan := make(chan runResult)
 	for _, it := range its {
-		if it.Predicate == "_delete_" {
+		if it.Predicate == "_delete_" && !q.getDeleted {
 			// If marked as deleted, don't return this node.
 			log.WithField("id", result.Id).
 				WithField("kind", result.Kind).
