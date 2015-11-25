@@ -134,6 +134,7 @@ func (q *Query) Collect(kind string) *Query {
 	child := new(Query)
 	child.parent = q
 	child.kind = kind
+	child.getDeleted = q.getDeleted
 	q.children = append(q.children, child)
 	return child
 }
@@ -230,6 +231,7 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 			nchildq := new(Query)
 			*nchildq = *childq // This is important, otherwise id gets overwritten
 			nchildq.id = it.ObjectId
+			nchildq.getDeleted = q.getDeleted
 
 			// Use child's maxDepth here, instead of parent's.
 			waitTimes += 1
@@ -242,6 +244,7 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 		if len(it.ObjectId) > 0 && level < max {
 			child := new(Query)
 			child.id = it.ObjectId
+			child.getDeleted = q.getDeleted
 
 			waitTimes += 1
 			log.WithField("child_id", child.id).WithField("level", level+1).
