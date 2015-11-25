@@ -268,6 +268,9 @@ func (q *Query) doRun(level, max int, ch chan runResult) {
 // Any errors encountered during these stpeps is returned as well.
 func (q *Query) Run() (result *Result, rerr error) {
 	q = q.root()
+	if len(q.id) == 0 {
+		return result, errors.New("Empty entity id")
+	}
 
 	ch := make(chan runResult)
 	go q.doRun(0, q.maxDepth, ch)
