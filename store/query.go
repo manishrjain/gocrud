@@ -115,6 +115,9 @@ func (q *Query) UptoDepth(level int) *Query {
 	return q
 }
 
+// AllowDeleted will make this query not ignore entities with the _delete_ flag
+// set. Use this to retrieve deleted entities if required.
+
 func (q *Query) AllowDeleted() *Query {
 	q.getDeleted = true
 	return q
