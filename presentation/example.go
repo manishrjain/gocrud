@@ -56,7 +56,7 @@ func storeQuery() {
 type SimpleIndexer struct {
 }
 
-// Return all entities to be re-indexed when entity x gets updated.
+// OnUpdate returns all entities to be re-indexed when entity x gets updated.
 func (si SimpleIndexer) OnUpdate(e x.Entity) (result []x.Entity) {
 	result = append(result, e) // Add self.
 	return
