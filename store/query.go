@@ -80,7 +80,7 @@ func (v Versions) Count() int {
 	return len(v.versions)
 }
 
-// Retrieve the parent id for given entity id. Return ErrNoParent if parent is
+// Parent retrieves the parent id for given entity id. Return ErrNoParent if parent is
 // not present. Otherwise, if an error occurs during retrieval, returns that.
 func Parent(id string) (parentid string, rerr error) {
 	its, err := Get().GetEntity(id)
